@@ -72,13 +72,13 @@ export type GeneralSettings = {
 
 export const defaultSettings: GeneralSettings = {
   siteName: "Acil Tıp Uzmanı",
-  tagline: "Acil Tıp Buluşma Noktası",
+  tagline: "Acil Tıp Merkezi",
   announcement: "",
   heroTitle: "Acil Tıbbın Nabzı",
   heroSubtitle: "Türkiye acil tıp camiasının haber, etkinlik ve yayın merkezi.",
   contactEmail: "info@aciltipuzmani.com",
   showAnnouncement: false,
-  newsTitle: "Son haberler",
+  newsTitle: "Son yazilar",
   newsSubtitle: "Klinik pratik, eğitim ve camiadan güncel gelişmeler.",
   externalTitle: "Acil Tıp Web Sitelerinden",
   externalSubtitle: "",
