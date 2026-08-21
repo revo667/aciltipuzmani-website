@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { pageQuery } from "@/lib/content";
+import { RichText } from "@/components/site/RichText";
 
 export const Route = createFileRoute("/sayfa/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(pageQuery(params.slug)),
@@ -63,16 +64,7 @@ function PageView() {
           className="mt-8 w-full rounded-2xl border border-border object-cover"
         />
       ) : null}
-      <div className="mt-8 space-y-4 text-base leading-relaxed">
-        {page.content
-          .split(/\n{2,}/)
-          .filter(Boolean)
-          .map((paragraph, i) => (
-            <p key={i} className="whitespace-pre-line">
-              {paragraph}
-            </p>
-          ))}
-      </div>
+      <RichText html={page.content} className="mt-8" />
     </article>
   );
 }

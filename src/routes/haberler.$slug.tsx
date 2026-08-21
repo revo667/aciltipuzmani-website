@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { RichText } from "@/components/site/RichText";
 import { formatDate, postQuery } from "@/lib/content";
 
 export const Route = createFileRoute("/haberler/$slug")({
@@ -73,11 +74,7 @@ function PostDetail() {
       {post.excerpt ? (
         <p className="mt-8 text-lg leading-relaxed text-muted-foreground">{post.excerpt}</p>
       ) : null}
-      <div className="mt-6 space-y-4 text-base leading-relaxed">
-        {post.content.split("\n").filter(Boolean).map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
-      </div>
+      <RichText html={post.content} className="mt-6" />
     </article>
   );
 }
