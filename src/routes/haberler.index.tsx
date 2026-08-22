@@ -41,8 +41,20 @@ function PostsPage() {
           <p className="text-sm text-muted-foreground">Henüz içerik yayınlanmadı.</p>
         ) : (
           posts.map((post) => (
-            <Link key={post.id} to="/haberler/$slug" params={{ slug: post.slug }}>
-              <Card className="h-full card-hover">
+            <Link key={post.id} to="/haberler/$slug" params={{ slug: post.slug }} className="group">
+              <Card className="h-full overflow-hidden card-hover">
+                <div className="aspect-[16/9] w-full overflow-hidden border-b border-border">
+                  {post.cover_url ? (
+                    <img
+                      src={post.cover_url}
+                      alt=""
+                      loading="lazy"
+                      className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="size-full bg-gradient-to-br from-primary/70 via-primary/35 to-secondary" />
+                  )}
+                </div>
                 <CardHeader>
                   <Badge variant="secondary" className="w-fit capitalize">
                     {post.category}
