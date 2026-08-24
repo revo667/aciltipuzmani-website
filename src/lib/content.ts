@@ -29,7 +29,6 @@ export type EventItem = {
   created_at: string;
 };
 
-
 export type LinkItem = {
   id: string;
   name: string;
@@ -68,17 +67,20 @@ export type GeneralSettings = {
   eventsSubtitle: string;
   linksTitle: string;
   linksSubtitle: string;
+  maintenanceMode: boolean;
+  maintenanceTitle: string;
+  maintenanceMessage: string;
 };
 
 export const defaultSettings: GeneralSettings = {
   siteName: "Acil Tıp Uzmanı",
-  tagline: "Acil Tıp Merkezi",
+  tagline: "Acil Tıp Buluşma Noktası",
   announcement: "",
   heroTitle: "Acil Tıbbın Nabzı",
   heroSubtitle: "Türkiye acil tıp camiasının haber, etkinlik ve yayın merkezi.",
   contactEmail: "info@aciltipuzmani.com",
   showAnnouncement: false,
-  newsTitle: "Son yazilar",
+  newsTitle: "Son haberler",
   newsSubtitle: "Klinik pratik, eğitim ve camiadan güncel gelişmeler.",
   externalTitle: "Acil Tıp Web Sitelerinden",
   externalSubtitle: "",
@@ -87,8 +89,11 @@ export const defaultSettings: GeneralSettings = {
   eventsSubtitle: "Kongreler, kurslar, sempozyumlar.",
   linksTitle: "Dernekler ve yayınlar",
   linksSubtitle: "Acil tıp camiasının dernekleri ve hakemli dergilerine hızlı erişim.",
+  maintenanceMode: false,
+  maintenanceTitle: "Kısa bir bakımdayız",
+  maintenanceMessage:
+    "Siteyi daha iyi hale getirmek için kısa bir ara verdik. Kısa süre içinde yeniden buradayız.",
 };
-
 
 export const postsQuery = (limit?: number) => ({
   queryKey: ["posts", "published", limit ?? "all"],
@@ -254,6 +259,25 @@ export function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
+/** Etkinlik tarih araligi: "15-18 Kasim 2026" / "28 Ekim - 2 Kasim 2026". Saat gostermez. */
+export function formatDateRange(start: string | null, end?: string | null) {
+  if (!start) return "";
+  if (!end) return formatDate(start);
+  const a = new Date(start);
+  const b = new Date(end);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return formatDate(start);
+  const part = (d: Date, opts: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("tr-TR", { timeZone: "Europe/Istanbul", ...opts }).format(d);
+  const [dayA, dayB] = [part(a, { day: "numeric" }), part(b, { day: "numeric" })];
+  const [monthA, monthB] = [part(a, { month: "long" }), part(b, { month: "long" })];
+  const [yearA, yearB] = [part(a, { year: "numeric" }), part(b, { year: "numeric" })];
+  if (yearA === yearB && monthA === monthB) {
+    return dayA === dayB ? formatDate(start) : `${dayA}-${dayB} ${monthA} ${yearA}`;
+  }
+  if (yearA === yearB) return `${dayA} ${monthA} - ${dayB} ${monthB} ${yearA}`;
+  return `${formatDate(start)} - ${formatDate(end)}`;
+}
+
 export function formatDateTime(value: string | null) {
   if (!value) return "";
   return new Intl.DateTimeFormat("tr-TR", {
@@ -262,4 +286,3 @@ export function formatDateTime(value: string | null) {
     timeZone: "Europe/Istanbul",
   }).format(new Date(value));
 }
-

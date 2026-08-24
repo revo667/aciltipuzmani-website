@@ -13,8 +13,8 @@ import appCss from "../styles.css?url";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
+import { MaintenanceGate } from "@/components/site/MaintenanceGate";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-
 
 function NotFoundComponent() {
   return (
@@ -146,13 +146,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <div className="flex min-h-screen flex-col">
-        <SiteHeader />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <SiteFooter />
-      </div>
+      <MaintenanceGate>
+        <div className="flex min-h-screen flex-col">
+          <SiteHeader />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <SiteFooter />
+        </div>
+      </MaintenanceGate>
       <Toaster position="top-center" richColors />
     </QueryClientProvider>
   );

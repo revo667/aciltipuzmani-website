@@ -17,6 +17,7 @@ import { Route as GirisRouteImport } from './routes/giris'
 import { Route as KaynaklarRouteImport } from './routes/kaynaklar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminArayuzRouteImport } from './routes/admin.arayuz'
+import { Route as AdminAyarlarRouteImport } from './routes/admin.ayarlar'
 import { Route as AdminBaglantilarRouteImport } from './routes/admin.baglantilar'
 import { Route as AdminDislinklerRouteImport } from './routes/admin.dislinkler'
 import { Route as AdminEtkinliklerRouteImport } from './routes/admin.etkinlikler'
@@ -66,6 +67,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminArayuzRoute = AdminArayuzRouteImport.update({
   id: '/arayuz',
   path: '/arayuz',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAyarlarRoute = AdminAyarlarRouteImport.update({
+  id: '/ayarlar',
+  path: '/ayarlar',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBaglantilarRoute = AdminBaglantilarRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/giris': typeof GirisRoute
   '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
+  '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/giris': typeof GirisRoute
   '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
+  '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/giris': typeof GirisRoute
   '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
+  '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
@@ -189,6 +198,7 @@ export interface FileRouteTypes {
     | '/giris'
     | '/kaynaklar'
     | '/admin/arayuz'
+    | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/giris'
     | '/kaynaklar'
     | '/admin/arayuz'
+    | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/giris'
     | '/kaynaklar'
     | '/admin/arayuz'
+    | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminArayuzRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/ayarlar': {
+      id: '/admin/ayarlar'
+      path: '/ayarlar'
+      fullPath: '/admin/ayarlar'
+      preLoaderRoute: typeof AdminAyarlarRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/baglantilar': {
       id: '/admin/baglantilar'
       path: '/baglantilar'
@@ -386,6 +405,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminArayuzRoute: typeof AdminArayuzRoute
+  AdminAyarlarRoute: typeof AdminAyarlarRoute
   AdminBaglantilarRoute: typeof AdminBaglantilarRoute
   AdminDislinklerRoute: typeof AdminDislinklerRoute
   AdminEtkinliklerRoute: typeof AdminEtkinliklerRoute
@@ -398,6 +418,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminArayuzRoute: AdminArayuzRoute,
+  AdminAyarlarRoute: AdminAyarlarRoute,
   AdminBaglantilarRoute: AdminBaglantilarRoute,
   AdminDislinklerRoute: AdminDislinklerRoute,
   AdminEtkinliklerRoute: AdminEtkinliklerRoute,

@@ -14,7 +14,6 @@ import {
   settingsQuery,
 } from "@/lib/content";
 
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -50,7 +49,13 @@ function FeatureTile({
   className,
   big,
 }: {
-  post: { slug: string; title: string; cover_url: string | null; published_at: string | null; created_at: string };
+  post: {
+    slug: string;
+    title: string;
+    cover_url: string | null;
+    published_at: string | null;
+    created_at: string;
+  };
   className?: string;
   big?: boolean;
 }) {
@@ -104,14 +109,15 @@ function PlaceholderTile({ className }: { className?: string }) {
 }
 
 function Home() {
-  const { data: posts } = useSuspenseQuery(postsQuery(8));
+  const { data: posts } = useSuspenseQuery(postsQuery(20));
   const { data: events } = useSuspenseQuery(eventsQuery(15));
   const { data: links } = useSuspenseQuery(linksQuery());
   const { data: externalArticles } = useSuspenseQuery(externalArticlesQuery());
   const { data: settings } = useSuspenseQuery(settingsQuery());
 
-  const featured = posts.slice(0, 5);
-  const placeholders = Math.max(0, 5 - featured.length);
+  const featured = posts.slice(0, 3);
+  const placeholders = Math.max(0, 3 - featured.length);
+  const featuredIds = new Set(featured.map((p) => p.id));
 
   type FeedItem = {
     key: string;
@@ -124,14 +130,16 @@ function Home() {
   };
 
   const feed: FeedItem[] = [
-    ...posts.map((p) => ({
-      key: `post-${p.id}`,
-      kind: p.category,
-      title: p.title,
-      excerpt: p.excerpt,
-      date: p.published_at ?? p.created_at,
-      to: { slug: p.slug },
-    })),
+    ...posts
+      .filter((p) => !featuredIds.has(p.id))
+      .map((p) => ({
+        key: `post-${p.id}`,
+        kind: p.category,
+        title: p.title,
+        excerpt: p.excerpt,
+        date: p.published_at ?? p.created_at,
+        to: { slug: p.slug },
+      })),
     ...events.map((e) => ({
       key: `event-${e.id}`,
       kind: "Etkinlik",
@@ -149,23 +157,22 @@ function Home() {
     })),
   ]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6);
+    .slice(0, 12);
 
   return (
     <div>
       {featured.length > 0 ? (
         <section className="grid gap-px bg-border md:grid-cols-2">
-          <FeatureTile
-            post={featured[0]!}
-            big
-            className="min-h-[280px] md:min-h-[520px]"
-          />
-          <div className="grid gap-px bg-border sm:grid-cols-2">
-            {featured.slice(1, 5).map((post) => (
+          <FeatureTile post={featured[0]!} big className="min-h-[280px] md:min-h-[520px]" />
+          <div className="grid gap-px bg-border">
+            {featured.slice(1, 3).map((post) => (
               <FeatureTile key={post.id} post={post} className="min-h-[200px] md:min-h-[260px]" />
             ))}
             {Array.from({ length: placeholders }).map((_, i) => (
-              <PlaceholderTile key={`placeholder-${i}`} className="min-h-[200px] md:min-h-[260px]" />
+              <PlaceholderTile
+                key={`placeholder-${i}`}
+                className="min-h-[200px] md:min-h-[260px]"
+              />
             ))}
           </div>
         </section>
@@ -175,9 +182,7 @@ function Home() {
         <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold md:text-3xl">{settings.newsTitle}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {settings.newsSubtitle}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{settings.newsSubtitle}</p>
           </div>
           <Link to="/haberler" className="text-sm font-medium text-primary hover:underline">
             Tümü
@@ -228,7 +233,6 @@ function Home() {
         </div>
       </section>
 
-
       <ExternalArticlesStrip
         articles={externalArticles}
         title={settings.externalTitle}
@@ -256,9 +260,7 @@ function Home() {
       <section className="container-page py-16">
         <div className="text-center">
           <h2 className="text-3xl font-semibold md:text-4xl">{settings.linksTitle}</h2>
-          <p className="mx-auto mt-2 max-w-2xl text-muted-foreground">
-            {settings.linksSubtitle}
-          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-muted-foreground">{settings.linksSubtitle}</p>
         </div>
         <div className="mt-12">
           <LogoWall links={links} marquee />

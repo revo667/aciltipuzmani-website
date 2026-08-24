@@ -10,6 +10,7 @@ import {
   Files,
   ListTree,
   Globe,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ const items = [
   { to: "/admin/menu", label: "Menü", icon: ListTree },
   { to: "/admin/arayuz", label: "Arayüz", icon: Palette },
   { to: "/admin/kullanicilar", label: "Kullanıcılar", icon: Users },
+  { to: "/admin/ayarlar", label: "Ayarlar", icon: Settings },
 ] as const;
 
 function AdminLayout() {

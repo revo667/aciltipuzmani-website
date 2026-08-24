@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { eventsQuery, formatDateTime, type EventItem } from "@/lib/content";
+import { eventsQuery, formatDateRange, type EventItem } from "@/lib/content";
 
 export const Route = createFileRoute("/etkinlikler")({
   head: () => ({
@@ -37,7 +37,7 @@ function EventsPage() {
     <div className="container-page py-14">
       <h1 className="text-3xl font-semibold md:text-4xl">Etkinlik takvimi</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Kongreler, kurslar ve sempozyumlar; tarih ve kayıt bilgileriyle.
+        Kongreler, kurslar ve sempozyumlar; tarih ve organizasyon bilgileriyle.
       </p>
 
       <Section title="Yaklaşan" items={upcoming} empty="Yaklaşan etkinlik bulunmuyor." />
@@ -88,7 +88,7 @@ function Section({
               </div>
               <p className="mt-1.5 flex flex-wrap justify-center gap-x-3 text-center text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="size-3.5" /> {formatDateTime(ev.starts_at)}
+                  <CalendarDays className="size-3.5" /> {formatDateRange(ev.starts_at, ev.ends_at)}
                 </span>
                 {ev.location || ev.city ? (
                   <span className="inline-flex items-center gap-1">
@@ -100,7 +100,7 @@ function Section({
               {ev.registration_url ? (
                 <Button asChild variant="outline" size="sm" className="mx-auto mt-3">
                   <a href={ev.registration_url} target="_blank" rel="noreferrer">
-                    Kayıt ol
+                    Organizasyon Sayfası
                   </a>
                 </Button>
               ) : null}

@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatDateTime, slugify, type EventItem } from "@/lib/content";
+import { formatDateRange, slugify, type EventItem } from "@/lib/content";
 
 export const Route = createFileRoute("/admin/etkinlikler")({
   component: AdminEvents,
@@ -52,11 +52,13 @@ const emptyDraft: Draft = {
   status: "published",
 };
 
+/** Etkinliklerde saat kullanilmiyor; input'lar gun bazinda calisiyor. */
 function toLocalInput(value: string | null) {
   if (!value) return "";
   const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function AdminEvents() {
@@ -170,16 +172,17 @@ function AdminEvents() {
                 />
               ) : null}
               <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate font-medium">{ev.title}</h2>
-                {ev.featured ? <Badge>Öne çıkan</Badge> : null}
-                <Badge variant={ev.status === "published" ? "default" : "secondary"}>
-                  {ev.status === "published" ? "Yayında" : "Taslak"}
-                </Badge>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {formatDateTime(ev.starts_at)} · {[ev.location, ev.city].filter(Boolean).join(", ")}
-              </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate font-medium">{ev.title}</h2>
+                  {ev.featured ? <Badge>Öne çıkan</Badge> : null}
+                  <Badge variant={ev.status === "published" ? "default" : "secondary"}>
+                    {ev.status === "published" ? "Yayında" : "Taslak"}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatDateRange(ev.starts_at, ev.ends_at)} ·{" "}
+                  {[ev.location, ev.city].filter(Boolean).join(", ")}
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -243,7 +246,7 @@ function AdminEvents() {
                 <div className="space-y-2">
                   <Label>Başlangıç</Label>
                   <Input
-                    type="datetime-local"
+                    type="date"
                     value={draft.starts_at}
                     onChange={(e) => setDraft({ ...draft, starts_at: e.target.value })}
                   />
@@ -251,7 +254,7 @@ function AdminEvents() {
                 <div className="space-y-2">
                   <Label>Bitiş</Label>
                   <Input
-                    type="datetime-local"
+                    type="date"
                     value={draft.ends_at}
                     onChange={(e) => setDraft({ ...draft, ends_at: e.target.value })}
                   />
@@ -272,7 +275,7 @@ function AdminEvents() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Kayıt bağlantısı</Label>
+                <Label>Organizasyon sayfası bağlantısı</Label>
                 <Input
                   value={draft.registration_url}
                   onChange={(e) => setDraft({ ...draft, registration_url: e.target.value })}
