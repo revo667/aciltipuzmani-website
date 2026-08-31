@@ -35,8 +35,8 @@ export function SiteHeader() {
       ) : null}
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <Activity className="size-5" />
+          <span className="flex size-9 items-center justify-center">
+            <img src="/logo.png" alt="Logo" className="size-9" />
           </span>
           <span className="leading-tight">
             <span className="block font-display text-base font-semibold">
