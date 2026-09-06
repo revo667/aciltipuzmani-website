@@ -286,3 +286,197 @@ export function formatDateTime(value: string | null) {
     timeZone: "Europe/Istanbul",
   }).format(new Date(value));
 }
+
+/* ── Kategori & etiket ─────────────────────────────────────────────── */
+
+export type Category = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sort_order: number;
+};
+
+export type Tag = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
+export const categoriesQuery = () => ({
+  queryKey: ["categories"],
+  queryFn: async (): Promise<Category[]> => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id,name,slug,description,sort_order")
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as Category[];
+  },
+});
+
+export const tagsQuery = () => ({
+  queryKey: ["tags"],
+  queryFn: async (): Promise<Tag[]> => {
+    const { data, error } = await supabase
+      .from("tags")
+      .select("id,name,slug")
+      .order("name", { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as Tag[];
+  },
+});
+
+export type Taxonomy = { categoryIds: string[]; tagIds: string[] };
+
+const emptyTaxonomy: Taxonomy = { categoryIds: [], tagIds: [] };
+
+/** Bir yazinin kategori ve etiket kimlikleri. */
+export const postTaxonomyQuery = (id: string | undefined) => ({
+  queryKey: ["post_taxonomy", id ?? ""],
+  enabled: Boolean(id),
+  queryFn: async (): Promise<Taxonomy> => {
+    if (!id) return emptyTaxonomy;
+    const [cats, tags] = await Promise.all([
+      supabase.from("post_categories").select("category_id").eq("post_id", id),
+      supabase.from("post_tags").select("tag_id").eq("post_id", id),
+    ]);
+    if (cats.error) throw cats.error;
+    if (tags.error) throw tags.error;
+    return {
+      categoryIds: (cats.data ?? []).map((r) => r.category_id),
+      tagIds: (tags.data ?? []).map((r) => r.tag_id),
+    };
+  },
+});
+
+/** Bir sayfanin kategori ve etiket kimlikleri. */
+export const pageTaxonomyQuery = (id: string | undefined) => ({
+  queryKey: ["page_taxonomy", id ?? ""],
+  enabled: Boolean(id),
+  queryFn: async (): Promise<Taxonomy> => {
+    if (!id) return emptyTaxonomy;
+    const [cats, tags] = await Promise.all([
+      supabase.from("page_categories").select("category_id").eq("page_id", id),
+      supabase.from("page_tags").select("tag_id").eq("page_id", id),
+    ]);
+    if (cats.error) throw cats.error;
+    if (tags.error) throw tags.error;
+    return {
+      categoryIds: (cats.data ?? []).map((r) => r.category_id),
+      tagIds: (tags.data ?? []).map((r) => r.tag_id),
+    };
+  },
+});
+
+export type ArchiveResult = {
+  term: { name: string; slug: string; description: string | null } | null;
+  posts: Post[];
+  pages: PageItem[];
+};
+
+async function publishedPosts(ids: string[]): Promise<Post[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .in("id", ids)
+    .eq("status", "published")
+    .order("published_at", { ascending: false, nullsFirst: false });
+  if (error) throw error;
+  return (data ?? []) as Post[];
+}
+
+async function publishedPages(ids: string[]): Promise<PageItem[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("pages")
+    .select("*")
+    .in("id", ids)
+    .eq("status", "published")
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as PageItem[];
+}
+
+export const categoryArchiveQuery = (slug: string) => ({
+  queryKey: ["archive", "category", slug],
+  queryFn: async (): Promise<ArchiveResult> => {
+    const { data: term, error } = await supabase
+      .from("categories")
+      .select("id,name,slug,description")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!term) return { term: null, posts: [], pages: [] };
+
+    const [postRel, pageRel] = await Promise.all([
+      supabase.from("post_categories").select("post_id").eq("category_id", term.id),
+      supabase.from("page_categories").select("page_id").eq("category_id", term.id),
+    ]);
+    if (postRel.error) throw postRel.error;
+    if (pageRel.error) throw pageRel.error;
+
+    const [posts, pages] = await Promise.all([
+      publishedPosts((postRel.data ?? []).map((r) => r.post_id)),
+      publishedPages((pageRel.data ?? []).map((r) => r.page_id)),
+    ]);
+    return {
+      term: { name: term.name, slug: term.slug, description: term.description },
+      posts,
+      pages,
+    };
+  },
+});
+
+export const tagArchiveQuery = (slug: string) => ({
+  queryKey: ["archive", "tag", slug],
+  queryFn: async (): Promise<ArchiveResult> => {
+    const { data: term, error } = await supabase
+      .from("tags")
+      .select("id,name,slug")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    if (!term) return { term: null, posts: [], pages: [] };
+
+    const [postRel, pageRel] = await Promise.all([
+      supabase.from("post_tags").select("post_id").eq("tag_id", term.id),
+      supabase.from("page_tags").select("page_id").eq("tag_id", term.id),
+    ]);
+    if (postRel.error) throw postRel.error;
+    if (pageRel.error) throw pageRel.error;
+
+    const [posts, pages] = await Promise.all([
+      publishedPosts((postRel.data ?? []).map((r) => r.post_id)),
+      publishedPages((pageRel.data ?? []).map((r) => r.page_id)),
+    ]);
+    return { term: { name: term.name, slug: term.slug, description: null }, posts, pages };
+  },
+});
+
+/* ── Dernek & yayin bolumleri ──────────────────────────────────────── */
+
+export type LinkGroup = { kind: string; title: string };
+
+/** LogoWall bolumleri ve /kaynaklar/$kind sayfalari ayni listeyi kullanir. */
+export const linkGroups: LinkGroup[] = [
+  { kind: "yayin", title: "Acil Tıp Derneklerinin Yayınları" },
+  { kind: "dernek", title: "Acil Tıp Dernekleri" },
+  { kind: "klinik", title: "Acil Tıp Klinikleri Web Siteleri" },
+  { kind: "kaynak", title: "Acil Tıp Web Siteleri" },
+];
+
+export const linksByKindQuery = (kind: string) => ({
+  queryKey: ["links", "kind", kind],
+  queryFn: async (): Promise<LinkItem[]> => {
+    const { data, error } = await supabase
+      .from("links")
+      .select("*")
+      .eq("kind", kind)
+      .order("sort_order", { ascending: true });
+    if (error) throw error;
+    return (data ?? []) as LinkItem[];
+  },
+});

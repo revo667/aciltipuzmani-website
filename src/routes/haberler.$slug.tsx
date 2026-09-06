@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RichText } from "@/components/site/RichText";
+import { ContentTaxonomy } from "@/components/site/ContentTaxonomy";
 import { formatDate, postQuery } from "@/lib/content";
 
 export const Route = createFileRoute("/haberler/$slug")({
@@ -75,6 +76,7 @@ function PostDetail() {
         <p className="mt-8 text-lg leading-relaxed text-muted-foreground">{post.excerpt}</p>
       ) : null}
       <RichText html={post.content} className="mt-6" />
+      <ContentTaxonomy kind="post" id={post.id} className="mt-10 border-t border-border pt-6" />
     </article>
   );
 }

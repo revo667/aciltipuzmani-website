@@ -14,19 +14,23 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DisYazilarRouteImport } from './routes/dis-yazilar'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as GirisRouteImport } from './routes/giris'
-import { Route as KaynaklarRouteImport } from './routes/kaynaklar'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminArayuzRouteImport } from './routes/admin.arayuz'
 import { Route as AdminAyarlarRouteImport } from './routes/admin.ayarlar'
 import { Route as AdminBaglantilarRouteImport } from './routes/admin.baglantilar'
 import { Route as AdminDislinklerRouteImport } from './routes/admin.dislinkler'
 import { Route as AdminEtkinliklerRouteImport } from './routes/admin.etkinlikler'
+import { Route as AdminKategorilerRouteImport } from './routes/admin.kategoriler'
 import { Route as AdminKullanicilarRouteImport } from './routes/admin.kullanicilar'
 import { Route as AdminMenuRouteImport } from './routes/admin.menu'
 import { Route as AdminSayfalarRouteImport } from './routes/admin.sayfalar'
 import { Route as AdminYazilarRouteImport } from './routes/admin.yazilar'
+import { Route as EtiketSlugRouteImport } from './routes/etiket.$slug'
 import { Route as HaberlerIndexRouteImport } from './routes/haberler.index'
 import { Route as HaberlerSlugRouteImport } from './routes/haberler.$slug'
+import { Route as KategoriSlugRouteImport } from './routes/kategori.$slug'
+import { Route as KaynaklarIndexRouteImport } from './routes/kaynaklar.index'
+import { Route as KaynaklarKindRouteImport } from './routes/kaynaklar.$kind'
 import { Route as SayfaSlugRouteImport } from './routes/sayfa.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -52,11 +56,6 @@ const EtkinliklerRoute = EtkinliklerRouteImport.update({
 const GirisRoute = GirisRouteImport.update({
   id: '/giris',
   path: '/giris',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const KaynaklarRoute = KaynaklarRouteImport.update({
-  id: '/kaynaklar',
-  path: '/kaynaklar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -89,6 +88,11 @@ const AdminEtkinliklerRoute = AdminEtkinliklerRouteImport.update({
   path: '/etkinlikler',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminKategorilerRoute = AdminKategorilerRouteImport.update({
+  id: '/kategoriler',
+  path: '/kategoriler',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminKullanicilarRoute = AdminKullanicilarRouteImport.update({
   id: '/kullanicilar',
   path: '/kullanicilar',
@@ -109,6 +113,11 @@ const AdminYazilarRoute = AdminYazilarRouteImport.update({
   path: '/yazilar',
   getParentRoute: () => AdminRoute,
 } as any)
+const EtiketSlugRoute = EtiketSlugRouteImport.update({
+  id: '/etiket/$slug',
+  path: '/etiket/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HaberlerIndexRoute = HaberlerIndexRouteImport.update({
   id: '/haberler/',
   path: '/haberler/',
@@ -117,6 +126,21 @@ const HaberlerIndexRoute = HaberlerIndexRouteImport.update({
 const HaberlerSlugRoute = HaberlerSlugRouteImport.update({
   id: '/haberler/$slug',
   path: '/haberler/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KategoriSlugRoute = KategoriSlugRouteImport.update({
+  id: '/kategori/$slug',
+  path: '/kategori/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KaynaklarIndexRoute = KaynaklarIndexRouteImport.update({
+  id: '/kaynaklar/',
+  path: '/kaynaklar/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KaynaklarKindRoute = KaynaklarKindRouteImport.update({
+  id: '/kaynaklar/$kind',
+  path: '/kaynaklar/$kind',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SayfaSlugRoute = SayfaSlugRouteImport.update({
@@ -131,40 +155,48 @@ export interface FileRoutesByFullPath {
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
-  '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
+  '/etiket/$slug': typeof EtiketSlugRoute
   '/haberler/$slug': typeof HaberlerSlugRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/kaynaklar/$kind': typeof KaynaklarKindRoute
   '/sayfa/$slug': typeof SayfaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/haberler/': typeof HaberlerIndexRoute
+  '/kaynaklar/': typeof KaynaklarIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
-  '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
+  '/etiket/$slug': typeof EtiketSlugRoute
   '/haberler/$slug': typeof HaberlerSlugRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/kaynaklar/$kind': typeof KaynaklarKindRoute
   '/sayfa/$slug': typeof SayfaSlugRoute
   '/admin': typeof AdminIndexRoute
   '/haberler': typeof HaberlerIndexRoute
+  '/kaynaklar': typeof KaynaklarIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -173,20 +205,24 @@ export interface FileRoutesById {
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
-  '/kaynaklar': typeof KaynaklarRoute
   '/admin/arayuz': typeof AdminArayuzRoute
   '/admin/ayarlar': typeof AdminAyarlarRoute
   '/admin/baglantilar': typeof AdminBaglantilarRoute
   '/admin/dislinkler': typeof AdminDislinklerRoute
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
+  '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
+  '/etiket/$slug': typeof EtiketSlugRoute
   '/haberler/$slug': typeof HaberlerSlugRoute
+  '/kategori/$slug': typeof KategoriSlugRoute
+  '/kaynaklar/$kind': typeof KaynaklarKindRoute
   '/sayfa/$slug': typeof SayfaSlugRoute
   '/admin/': typeof AdminIndexRoute
   '/haberler/': typeof HaberlerIndexRoute
+  '/kaynaklar/': typeof KaynaklarIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -196,40 +232,48 @@ export interface FileRouteTypes {
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
-    | '/kaynaklar'
     | '/admin/arayuz'
     | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
+    | '/etiket/$slug'
     | '/haberler/$slug'
+    | '/kategori/$slug'
+    | '/kaynaklar/$kind'
     | '/sayfa/$slug'
     | '/admin/'
     | '/haberler/'
+    | '/kaynaklar/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
-    | '/kaynaklar'
     | '/admin/arayuz'
     | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
+    | '/etiket/$slug'
     | '/haberler/$slug'
+    | '/kategori/$slug'
+    | '/kaynaklar/$kind'
     | '/sayfa/$slug'
     | '/admin'
     | '/haberler'
+    | '/kaynaklar'
   id:
     | '__root__'
     | '/'
@@ -237,20 +281,24 @@ export interface FileRouteTypes {
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
-    | '/kaynaklar'
     | '/admin/arayuz'
     | '/admin/ayarlar'
     | '/admin/baglantilar'
     | '/admin/dislinkler'
     | '/admin/etkinlikler'
+    | '/admin/kategoriler'
     | '/admin/kullanicilar'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
+    | '/etiket/$slug'
     | '/haberler/$slug'
+    | '/kategori/$slug'
+    | '/kaynaklar/$kind'
     | '/sayfa/$slug'
     | '/admin/'
     | '/haberler/'
+    | '/kaynaklar/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,10 +307,13 @@ export interface RootRouteChildren {
   DisYazilarRoute: typeof DisYazilarRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
   GirisRoute: typeof GirisRoute
-  KaynaklarRoute: typeof KaynaklarRoute
+  EtiketSlugRoute: typeof EtiketSlugRoute
   HaberlerSlugRoute: typeof HaberlerSlugRoute
+  KategoriSlugRoute: typeof KategoriSlugRoute
+  KaynaklarKindRoute: typeof KaynaklarKindRoute
   SayfaSlugRoute: typeof SayfaSlugRoute
   HaberlerIndexRoute: typeof HaberlerIndexRoute
+  KaynaklarIndexRoute: typeof KaynaklarIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -300,13 +351,6 @@ declare module '@tanstack/react-router' {
       path: '/giris'
       fullPath: '/giris'
       preLoaderRoute: typeof GirisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/kaynaklar': {
-      id: '/kaynaklar'
-      path: '/kaynaklar'
-      fullPath: '/kaynaklar'
-      preLoaderRoute: typeof KaynaklarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -351,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEtkinliklerRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/kategoriler': {
+      id: '/admin/kategoriler'
+      path: '/kategoriler'
+      fullPath: '/admin/kategoriler'
+      preLoaderRoute: typeof AdminKategorilerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/kullanicilar': {
       id: '/admin/kullanicilar'
       path: '/kullanicilar'
@@ -379,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminYazilarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/etiket/$slug': {
+      id: '/etiket/$slug'
+      path: '/etiket/$slug'
+      fullPath: '/etiket/$slug'
+      preLoaderRoute: typeof EtiketSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/haberler/': {
       id: '/haberler/'
       path: '/haberler'
@@ -391,6 +449,27 @@ declare module '@tanstack/react-router' {
       path: '/haberler/$slug'
       fullPath: '/haberler/$slug'
       preLoaderRoute: typeof HaberlerSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kategori/$slug': {
+      id: '/kategori/$slug'
+      path: '/kategori/$slug'
+      fullPath: '/kategori/$slug'
+      preLoaderRoute: typeof KategoriSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kaynaklar/': {
+      id: '/kaynaklar/'
+      path: '/kaynaklar'
+      fullPath: '/kaynaklar/'
+      preLoaderRoute: typeof KaynaklarIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kaynaklar/$kind': {
+      id: '/kaynaklar/$kind'
+      path: '/kaynaklar/$kind'
+      fullPath: '/kaynaklar/$kind'
+      preLoaderRoute: typeof KaynaklarKindRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sayfa/$slug': {
@@ -409,6 +488,7 @@ interface AdminRouteChildren {
   AdminBaglantilarRoute: typeof AdminBaglantilarRoute
   AdminDislinklerRoute: typeof AdminDislinklerRoute
   AdminEtkinliklerRoute: typeof AdminEtkinliklerRoute
+  AdminKategorilerRoute: typeof AdminKategorilerRoute
   AdminKullanicilarRoute: typeof AdminKullanicilarRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminSayfalarRoute: typeof AdminSayfalarRoute
@@ -422,6 +502,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminBaglantilarRoute: AdminBaglantilarRoute,
   AdminDislinklerRoute: AdminDislinklerRoute,
   AdminEtkinliklerRoute: AdminEtkinliklerRoute,
+  AdminKategorilerRoute: AdminKategorilerRoute,
   AdminKullanicilarRoute: AdminKullanicilarRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminSayfalarRoute: AdminSayfalarRoute,
@@ -437,10 +518,13 @@ const rootRouteChildren: RootRouteChildren = {
   DisYazilarRoute: DisYazilarRoute,
   EtkinliklerRoute: EtkinliklerRoute,
   GirisRoute: GirisRoute,
-  KaynaklarRoute: KaynaklarRoute,
+  EtiketSlugRoute: EtiketSlugRoute,
   HaberlerSlugRoute: HaberlerSlugRoute,
+  KategoriSlugRoute: KategoriSlugRoute,
+  KaynaklarKindRoute: KaynaklarKindRoute,
   SayfaSlugRoute: SayfaSlugRoute,
   HaberlerIndexRoute: HaberlerIndexRoute,
+  KaynaklarIndexRoute: KaynaklarIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -16,8 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { slugify, type PageItem } from "@/lib/content";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TaxonomyPicker } from "@/components/admin/TaxonomyPicker";
+import { categoriesQuery, slugify, tagsQuery, type PageItem } from "@/lib/content";
+import { createCategory, createTag, savePageTaxonomy } from "@/lib/taxonomy";
 
 export const Route = createFileRoute("/admin/sayfalar")({
   component: AdminPages,
@@ -32,6 +40,8 @@ type Draft = {
   cover_url: string;
   status: string;
   sort_order: number;
+  categoryIds: string[];
+  tagIds: string[];
 };
 
 const emptyDraft: Draft = {
@@ -42,6 +52,8 @@ const emptyDraft: Draft = {
   cover_url: "",
   status: "published",
   sort_order: 0,
+  categoryIds: [],
+  tagIds: [],
 };
 
 function AdminPages() {
@@ -84,6 +96,56 @@ function AdminPages() {
     },
   });
 
+  const { data: categories = [] } = useQuery(categoriesQuery());
+  const { data: tags = [] } = useQuery(tagsQuery());
+
+  const { data: categoryLinks = [] } = useQuery({
+    queryKey: ["admin", "page_categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("page_categories").select("page_id,category_id");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: tagLinks = [] } = useQuery({
+    queryKey: ["admin", "page_tags"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("page_tags").select("page_id,tag_id");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const categoryIdsOf = (pageId: string) =>
+    categoryLinks.filter((r) => r.page_id === pageId).map((r) => r.category_id);
+  const tagIdsOf = (pageId: string) =>
+    tagLinks.filter((r) => r.page_id === pageId).map((r) => r.tag_id);
+
+  const addCategory = useMutation({
+    mutationFn: createCategory,
+    onSuccess: async (category) => {
+      setDraft((d) =>
+        d && !d.categoryIds.includes(category.id)
+          ? { ...d, categoryIds: [...d.categoryIds, category.id] }
+          : d,
+      );
+      await qc.invalidateQueries({ queryKey: ["categories"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const addTag = useMutation({
+    mutationFn: createTag,
+    onSuccess: async (tag) => {
+      setDraft((d) =>
+        d && !d.tagIds.includes(tag.id) ? { ...d, tagIds: [...d.tagIds, tag.id] } : d,
+      );
+      await qc.invalidateQueries({ queryKey: ["tags"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const save = useMutation({
     mutationFn: async (input: Draft) => {
       const payload = {
@@ -95,13 +157,16 @@ function AdminPages() {
         status: input.status,
         sort_order: Number(input.sort_order) || 0,
       };
-      if (input.id) {
-        const { error } = await supabase.from("pages").update(payload).eq("id", input.id);
+      let pageId = input.id;
+      if (pageId) {
+        const { error } = await supabase.from("pages").update(payload).eq("id", pageId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("pages").insert(payload);
+        const { data, error } = await supabase.from("pages").insert(payload).select("id").single();
         if (error) throw error;
+        pageId = data.id;
       }
+      await savePageTaxonomy(pageId, input.categoryIds, input.tagIds);
     },
     onSuccess: async () => {
       toast.success("Kaydedildi");
@@ -166,6 +231,8 @@ function AdminPages() {
                     cover_url: page.cover_url ?? "",
                     status: page.status,
                     sort_order: page.sort_order,
+                    categoryIds: categoryIdsOf(page.id),
+                    tagIds: tagIdsOf(page.id),
                   })
                 }
               >
@@ -230,6 +297,26 @@ function AdminPages() {
                   </Select>
                 </div>
               </div>
+              <TaxonomyPicker
+                label="Kategoriler"
+                items={categories}
+                selected={draft.categoryIds}
+                onChange={(ids) => setDraft({ ...draft, categoryIds: ids })}
+                onCreate={(name) => addCategory.mutate(name)}
+                creating={addCategory.isPending}
+                placeholder="Yeni kategori adı"
+              />
+
+              <TaxonomyPicker
+                label="Etiketler"
+                items={tags}
+                selected={draft.tagIds}
+                onChange={(ids) => setDraft({ ...draft, tagIds: ids })}
+                onCreate={(name) => addTag.mutate(name)}
+                creating={addTag.isPending}
+                placeholder="Yeni etiket adı"
+              />
+
               <div className="space-y-2">
                 <Label>Kapak görseli</Label>
                 {draft.cover_url ? (

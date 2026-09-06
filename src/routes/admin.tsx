@@ -11,6 +11,7 @@ import {
   ListTree,
   Globe,
   Settings,
+  Tags,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/admin")({
 const items = [
   { to: "/admin", label: "Özet", icon: LayoutDashboard, exact: true },
   { to: "/admin/yazilar", label: "Yazılar", icon: FileText },
+  { to: "/admin/kategoriler", label: "Kategori & Etiket", icon: Tags },
   { to: "/admin/etkinlikler", label: "Etkinlikler", icon: CalendarDays },
   { to: "/admin/baglantilar", label: "Dernek & Yayın", icon: LinkIcon },
   { to: "/admin/dislinkler", label: "Dış Linkler", icon: Globe },

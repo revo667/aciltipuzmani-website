@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { pageQuery } from "@/lib/content";
 import { RichText } from "@/components/site/RichText";
+import { ContentTaxonomy } from "@/components/site/ContentTaxonomy";
 
 export const Route = createFileRoute("/sayfa/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(pageQuery(params.slug)),
@@ -65,6 +66,7 @@ function PageView() {
         />
       ) : null}
       <RichText html={page.content} className="mt-8" />
+      <ContentTaxonomy kind="page" id={page.id} className="mt-10 border-t border-border pt-6" />
     </article>
   );
 }

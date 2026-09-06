@@ -3,7 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { linksQuery } from "@/lib/content";
 import { LogoWall } from "@/components/site/LogoWall";
 
-export const Route = createFileRoute("/kaynaklar")({
+export const Route = createFileRoute("/kaynaklar/")({
   head: () => ({
     meta: [
       { title: "Dernekler ve Bilimsel Yayınlar — Acil Tıp Uzmanı" },

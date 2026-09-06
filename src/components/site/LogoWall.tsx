@@ -1,26 +1,21 @@
-import { ExternalLink } from "lucide-react";
-import type { LinkItem } from "@/lib/content";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, ExternalLink } from "lucide-react";
+import { linkGroups, type LinkGroup, type LinkItem } from "@/lib/content";
 import { LogoMarquee } from "@/components/site/LogoMarquee";
-
-type Group = { kind: string; title: string };
-
-const defaultGroups: Group[] = [
-  { kind: "yayin", title: "Acil Tıp Derneklerinin Yayınları" },
-  { kind: "dernek", title: "Acil Tıp Dernekleri" },
-  { kind: "klinik", title: "Acil Tıp Klinikleri Web Siteleri" },
-  { kind: "kaynak", title: "Acil Tıp Web Siteleri" },
-];
 
 export function LogoWall({
   links,
-  groups = defaultGroups,
+  groups = linkGroups,
   showDisclaimer = true,
   marquee = false,
+  showAllLink = true,
 }: {
   links: LinkItem[];
-  groups?: Group[];
+  groups?: LinkGroup[];
   showDisclaimer?: boolean;
   marquee?: boolean;
+  /** Bolum basliginin sagindaki "Tümü" sekmesi. */
+  showAllLink?: boolean;
 }) {
   const visible = groups
     .map((g) => ({ ...g, items: links.filter((l) => l.kind === g.kind) }))
@@ -28,17 +23,25 @@ export function LogoWall({
 
   if (visible.length === 0) return null;
 
-
   return (
     <div className="space-y-14">
       {visible.map((group) => (
         <section key={group.kind}>
           <div className="flex items-center gap-4">
             <span className="hidden h-px flex-1 bg-primary/40 sm:block" />
-            <h2 className="text-center text-xl font-semibold text-primary md:text-2xl">
+            <h2 className="flex-1 text-center text-xl font-semibold text-primary sm:flex-none md:text-2xl">
               {group.title}
             </h2>
             <span className="hidden h-px flex-1 bg-primary/40 sm:block" />
+            {showAllLink ? (
+              <Link
+                to="/kaynaklar/$kind"
+                params={{ kind: group.kind }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/50 px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground md:text-sm"
+              >
+                Tümü <ArrowRight className="size-3.5" />
+              </Link>
+            ) : null}
           </div>
           <div className="mt-3 h-0.5 w-full rounded bg-primary/70" />
 

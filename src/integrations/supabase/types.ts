@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           city: string | null
@@ -167,6 +197,66 @@ export type Database = {
         }
         Relationships: []
       }
+      page_categories: {
+        Row: {
+          category_id: string
+          page_id: string
+        }
+        Insert: {
+          category_id: string
+          page_id: string
+        }
+        Update: {
+          category_id?: string
+          page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_categories_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_tags: {
+        Row: {
+          page_id: string
+          tag_id: string
+        }
+        Insert: {
+          page_id: string
+          tag_id: string
+        }
+        Update: {
+          page_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_tags_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "page_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pages: {
         Row: {
           content: string
@@ -205,6 +295,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      post_categories: {
+        Row: {
+          category_id: string
+          post_id: string
+        }
+        Insert: {
+          category_id: string
+          post_id: string
+        }
+        Update: {
+          category_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_categories_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_tags: {
+        Row: {
+          post_id: string
+          tag_id: string
+        }
+        Insert: {
+          post_id: string
+          tag_id: string
+        }
+        Update: {
+          post_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_tags_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       posts: {
         Row: {
@@ -290,6 +440,30 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          updated_at?: string
         }
         Relationships: []
       }
