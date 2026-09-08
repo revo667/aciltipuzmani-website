@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,7 +41,7 @@ function AdminAppearance() {
     <div className="max-w-2xl">
       <h1 className="text-2xl font-semibold">Arayüz ayarları</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Site adı, duyuru şeridi ve anasayfa metinleri.
+        Site adı, slogan, duyuru şeridi ve iletişim bilgisi.
       </p>
 
       <div className="mt-8 space-y-5 rounded-xl border border-border bg-card p-6 shadow-card">
@@ -100,88 +100,14 @@ function AdminAppearance() {
         </Button>
       </div>
 
-      <div className="mt-8 space-y-5 rounded-xl border border-border bg-card p-6 shadow-card">
-        <div>
-          <h2 className="text-lg font-semibold">Anasayfa bölüm başlıkları</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Anasayfadaki bölümlerin başlık ve açıklamalarını buradan düzenleyin.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Haberler bölümü başlığı</Label>
-          <Input
-            value={form.newsTitle}
-            onChange={(e) => setForm({ ...form, newsTitle: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Haberler bölümü açıklaması</Label>
-          <Input
-            value={form.newsSubtitle}
-            onChange={(e) => setForm({ ...form, newsSubtitle: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Dış yazılar bölümü başlığı</Label>
-          <Input
-            value={form.externalTitle}
-            onChange={(e) => setForm({ ...form, externalTitle: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Dış yazılar bölümü açıklaması</Label>
-          <Input
-            value={form.externalSubtitle}
-            onChange={(e) => setForm({ ...form, externalSubtitle: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>“Tümünü Gör” bağlantısı</Label>
-          <Input
-            placeholder="https://ornek.com/yazilar (boş bırakılırsa site içi /dis-yazilar sayfası açılır)"
-            value={form.externalAllUrl}
-            onChange={(e) => setForm({ ...form, externalAllUrl: e.target.value })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Boş bırakırsanız buton, admin panelinden eklediğiniz tüm dış yazıları listeleyen
-            site içi sayfaya gider.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Etkinlikler bölümü başlığı</Label>
-          <Input
-            value={form.eventsTitle}
-            onChange={(e) => setForm({ ...form, eventsTitle: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Etkinlikler bölümü açıklaması</Label>
-          <Input
-            value={form.eventsSubtitle}
-            onChange={(e) => setForm({ ...form, eventsSubtitle: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Dernekler/yayınlar bölümü başlığı</Label>
-          <Input
-            value={form.linksTitle}
-            onChange={(e) => setForm({ ...form, linksTitle: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label>Dernekler/yayınlar bölümü açıklaması</Label>
-          <Input
-            value={form.linksSubtitle}
-            onChange={(e) => setForm({ ...form, linksSubtitle: e.target.value })}
-          />
-        </div>
-
-        <Button disabled={save.isPending} onClick={() => save.mutate(form)}>
-          Kaydet
+      <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-card">
+        <h2 className="text-lg font-semibold">Anasayfa bölümleri</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Anasayfadaki bölümlerin başlıkları, görünürlüğü, kaç içerik gösterileceği ve kategori
+          seçimi artık Anasayfa ekranından yönetiliyor.
+        </p>
+        <Button asChild variant="outline" className="mt-4">
+          <Link to="/admin/anasayfa">Anasayfa ayarlarına git</Link>
         </Button>
       </div>
     </div>

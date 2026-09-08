@@ -70,7 +70,32 @@ export type GeneralSettings = {
   maintenanceMode: boolean;
   maintenanceTitle: string;
   maintenanceMessage: string;
+
+  /* Anasayfa — vitrin (ust buyuk gorseller) */
+  homeFeaturedEnabled: boolean;
+  homeFeaturedCount: number;
+  /** Bos dizi = tum kategoriler. */
+  homeFeaturedCategories: string[];
+
+  /* Anasayfa — son yazilar akisi */
+  homeFeedEnabled: boolean;
+  homeFeedColumns: number;
+  homeFeedRows: number;
+  /** Bos dizi = tum kategoriler. */
+  homeFeedCategories: string[];
+  homeFeedIncludeEvents: boolean;
+  homeFeedIncludeExternal: boolean;
+  homeFeedOrder: HomeFeedOrder;
+
+  /* Anasayfa — diger bolumler */
+  homeExternalEnabled: boolean;
+  homeEventsEnabled: boolean;
+  homeEventsLimit: number;
+  homeLinksEnabled: boolean;
 };
+
+/** Son yazilar siralamasi: yayin tarihine gore ya da kategori sirasina gore. */
+export type HomeFeedOrder = "date" | "category";
 
 export const defaultSettings: GeneralSettings = {
   siteName: "Acil Tıp Uzmanı",
@@ -93,7 +118,27 @@ export const defaultSettings: GeneralSettings = {
   maintenanceTitle: "Kısa bir bakımdayız",
   maintenanceMessage:
     "Siteyi daha iyi hale getirmek için kısa bir ara verdik. Kısa süre içinde yeniden buradayız.",
+
+  homeFeaturedEnabled: true,
+  homeFeaturedCount: 3,
+  homeFeaturedCategories: [],
+
+  homeFeedEnabled: true,
+  homeFeedColumns: 3,
+  homeFeedRows: 4,
+  homeFeedCategories: [],
+  homeFeedIncludeEvents: false,
+  homeFeedIncludeExternal: true,
+  homeFeedOrder: "date",
+
+  homeExternalEnabled: true,
+  homeEventsEnabled: true,
+  homeEventsLimit: 15,
+  homeLinksEnabled: true,
 };
+
+/** Anasayfa icin cekilen yazi havuzu. Kategori filtresi sonrasi yeterli kart kalsin diye genis tutulur. */
+export const HOME_POST_POOL = 60;
 
 export const postsQuery = (limit?: number) => ({
   queryKey: ["posts", "published", limit ?? "all"],
@@ -107,6 +152,28 @@ export const postsQuery = (limit?: number) => ({
     const { data, error } = await q;
     if (error) throw error;
     return (data ?? []) as Post[];
+  },
+});
+
+/** Anasayfa/liste kartlari icin yazinin govdesi cekilmez. */
+export type PostCard = Pick<
+  Post,
+  "id" | "title" | "slug" | "excerpt" | "cover_url" | "category" | "published_at" | "created_at"
+>;
+
+const postCardColumns = "id,title,slug,excerpt,cover_url,category,published_at,created_at";
+
+export const postCardsQuery = (limit: number) => ({
+  queryKey: ["posts", "cards", limit],
+  queryFn: async (): Promise<PostCard[]> => {
+    const { data, error } = await supabase
+      .from("posts")
+      .select(postCardColumns)
+      .eq("status", "published")
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as PostCard[];
   },
 });
 
@@ -213,6 +280,34 @@ export const menuQuery = () => ({
   },
 });
 
+/** JSON'dan gelen degeri string dizisine indirger; bozuk kayitta varsayilana doner. */
+function asSlugList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+}
+
+/** JSON'dan gelen sayiyi verilen araliga sikistirir. */
+function asBoundedNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(parsed)));
+}
+
+/** Panelden gelen JSON eksik ya da bozuk olsa da anasayfa calisir durumda kalsin. */
+function normalizeSettings(raw: Partial<GeneralSettings>): GeneralSettings {
+  const merged = { ...defaultSettings, ...raw };
+  return {
+    ...merged,
+    homeFeaturedCount: asBoundedNumber(merged.homeFeaturedCount, 3, 1, 6),
+    homeFeaturedCategories: asSlugList(merged.homeFeaturedCategories),
+    homeFeedColumns: asBoundedNumber(merged.homeFeedColumns, 3, 2, 4),
+    homeFeedRows: asBoundedNumber(merged.homeFeedRows, 4, 1, 8),
+    homeFeedCategories: asSlugList(merged.homeFeedCategories),
+    homeFeedOrder: merged.homeFeedOrder === "category" ? "category" : "date",
+    homeEventsLimit: asBoundedNumber(merged.homeEventsLimit, 15, 3, 40),
+  };
+}
+
 export const settingsQuery = () => ({
   queryKey: ["site_settings", "general"],
   queryFn: async (): Promise<GeneralSettings> => {
@@ -222,7 +317,7 @@ export const settingsQuery = () => ({
       .eq("key", "general")
       .maybeSingle();
     if (error) throw error;
-    return { ...defaultSettings, ...((data?.value as Partial<GeneralSettings>) ?? {}) };
+    return normalizeSettings((data?.value as Partial<GeneralSettings>) ?? {});
   },
 });
 
@@ -327,6 +422,56 @@ export const tagsQuery = () => ({
     return (data ?? []) as Tag[];
   },
 });
+
+/** Anasayfanin kategori filtresi/siralamasi icin ihtiyac duydugu tek seferlik esleme. */
+export type HomeTaxonomy = {
+  /** slug -> gorunen ad ve sira */
+  terms: Record<string, { name: string; sortOrder: number }>;
+  /** yazi kimligi -> kategori slug listesi */
+  byPost: Record<string, string[]>;
+};
+
+const emptyHomeTaxonomy: HomeTaxonomy = { terms: {}, byPost: {} };
+
+/**
+ * Taksonomi tablolari henuz olusmamissa bos doner; anasayfa hata vermek yerine
+ * filtresiz calismaya devam eder.
+ */
+export const homeTaxonomyQuery = () => ({
+  queryKey: ["home_taxonomy"],
+  queryFn: async (): Promise<HomeTaxonomy> => {
+    const [cats, links] = await Promise.all([
+      supabase.from("categories").select("id,name,slug,sort_order"),
+      supabase.from("post_categories").select("post_id,category_id"),
+    ]);
+    if (cats.error || links.error) return emptyHomeTaxonomy;
+
+    const terms: HomeTaxonomy["terms"] = {};
+    const slugById = new Map<string, string>();
+    for (const row of cats.data ?? []) {
+      slugById.set(row.id, row.slug);
+      terms[row.slug] = { name: row.name, sortOrder: row.sort_order ?? 0 };
+    }
+
+    const byPost: HomeTaxonomy["byPost"] = {};
+    for (const row of links.data ?? []) {
+      const slug = slugById.get(row.category_id);
+      if (!slug) continue;
+      (byPost[row.post_id] ??= []).push(slug);
+    }
+    return { terms, byPost };
+  },
+});
+
+/** Yazinin kategori slug'lari; taksonomi bagi yoksa eski `posts.category` sutununa duser. */
+export function categorySlugsOf(
+  post: { id: string; category: string },
+  taxonomy: HomeTaxonomy,
+): string[] {
+  const linked = taxonomy.byPost[post.id];
+  if (linked && linked.length > 0) return linked;
+  return post.category ? [post.category] : [];
+}
 
 export type Taxonomy = { categoryIds: string[]; tagIds: string[] };
 
