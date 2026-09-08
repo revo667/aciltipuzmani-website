@@ -40,9 +40,10 @@ function AdminMedia() {
   const { data: files = [], isLoading, error } = useQuery(mediaListQuery());
 
   const upload = useMutation({
-    mutationFn: async (list: FileList) => {
+    // Kopyalanmis dizi alir; bkz. MediaPicker'daki ayni not.
+    mutationFn: async (list: File[]) => {
       let count = 0;
-      for (const file of Array.from(list)) {
+      for (const file of list) {
         await uploadMedia(file, target);
         count += 1;
       }
@@ -126,8 +127,10 @@ function AdminMedia() {
             multiple
             className="hidden"
             onChange={(e) => {
-              if (e.target.files?.length) upload.mutate(e.target.files);
+              // Once kopyala, sonra input'u sifirla: sifirlama FileList'i bosaltir.
+              const picked = Array.from(e.target.files ?? []);
               e.target.value = "";
+              if (picked.length) upload.mutate(picked);
             }}
           />
         </div>

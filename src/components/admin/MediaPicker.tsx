@@ -41,9 +41,11 @@ export function MediaPicker({
   const { data: files = [], isLoading, error } = useQuery({ ...mediaListQuery(), enabled: open });
 
   const upload = useMutation({
-    mutationFn: async (list: FileList) => {
+    // Dosyalar FileList degil, kopyalanmis bir dizi olarak gelir: input sifirlaninca
+    // FileList de bosaldigi icin dogrudan FileList tutmak "0 gorsel yuklendi"ye yol aciyordu.
+    mutationFn: async (list: File[]) => {
       const uploaded: MediaFile[] = [];
-      for (const file of Array.from(list)) {
+      for (const file of list) {
         uploaded.push(await uploadMedia(file, folder));
       }
       return uploaded;
@@ -190,8 +192,10 @@ export function MediaPicker({
               multiple
               className="hidden"
               onChange={(e) => {
-                if (e.target.files?.length) upload.mutate(e.target.files);
+                // Once kopyala, sonra input'u sifirla: sifirlama FileList'i bosaltir.
+                const picked = Array.from(e.target.files ?? []);
                 e.target.value = "";
+                if (picked.length) upload.mutate(picked);
               }}
             />
           </TabsContent>
