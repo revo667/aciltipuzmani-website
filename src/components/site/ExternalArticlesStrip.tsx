@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronLeft, ChevronRight, ExternalLink, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,12 +26,23 @@ export function ExternalArticlesStrip({
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
   };
 
+  // Kartlar sutuna tam oturdugu icin bir ekran genisligi kadar kaydirmak tam sayfa atlatir.
   const scrollBy = (direction: number) => {
     const el = trackRef.current;
     if (!el) return;
-    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: "smooth" });
+    el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
     setTimeout(updateButtons, 350);
   };
+
+  // Ilk acilista ve genislik degistiginde oklarin durumu gercege uysun.
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    updateButtons();
+    const observer = new ResizeObserver(updateButtons);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [articles.length]);
 
   if (articles.length === 0) return null;
 
@@ -97,7 +108,8 @@ export function ExternalArticlesStrip({
               href={article.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex w-[260px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow hover:shadow-card-hover md:w-[300px]"
+              /* Genislikler gap-5 (1.25rem) dusulerek hesaplanir; boylece son kart yarim kalmaz. */
+              className="group flex w-full shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-shadow hover:shadow-card-hover sm:w-[calc((100%-1.25rem)/2)] lg:w-[calc((100%-2.5rem)/3)] xl:w-[calc((100%-3.75rem)/4)]"
             >
               <div className="relative aspect-[16/10] overflow-hidden bg-muted">
                 {article.cover_url ? (
