@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -14,23 +14,27 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Toaster } from "@/components/ui/sonner";
 import { MaintenanceGate } from "@/components/site/MaintenanceGate";
+import { fontHref, themeCss } from "@/components/site/ThemeStyle";
+import { defaultSettings, settingsQuery } from "@/lib/content";
+import { pageMeta } from "@/lib/seo";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
+  const { data: settings } = useQuery(settingsQuery());
+  const s = settings ?? defaultSettings;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-[60vh] items-center justify-center bg-background px-4 py-20">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
+        <h1 className="font-display text-7xl font-bold text-primary">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{s.notFoundTitle}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{s.notFoundMessage}</p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {s.notFoundButton}
           </Link>
         </div>
       </div>
@@ -41,19 +45,18 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const { data: settings } = useQuery(settingsQuery());
+  const s = settings ?? defaultSettings;
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-[60vh] items-center justify-center bg-background px-4 py-20">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">{s.errorTitle}</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{s.errorMessage}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
@@ -62,13 +65,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Try again
+            Tekrar dene
           </button>
           <a
             href="/"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
-            Go home
+            Anasayfaya dön
           </a>
         </div>
       </div>
@@ -77,39 +80,51 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
+  // Baslik, favicon, renkler ve analitik kodu panelden geldigi icin
+  // ayarlar sunucu tarafinda da yuklenir.
+  loader: async ({ context }) => {
+    try {
+      return { settings: await context.queryClient.ensureQueryData(settingsQuery()) };
+    } catch {
+      return { settings: defaultSettings };
+    }
+  },
+  head: ({ loaderData }) => {
+    const settings = loaderData?.settings ?? defaultSettings;
+    const base = pageMeta(settings);
+
+    const meta = [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Acil Tıp Uzmanı — Acil Tıbbın Nabzı" },
-      {
-        name: "description",
-        content:
-          "Türkiye acil tıp camiası için haber, kılavuz, kongre takvimi ve dernek kaynakları.",
-      },
-      { property: "og:title", content: "Acil Tıp Uzmanı — Acil Tıbbın Nabzı" },
-      {
-        property: "og:description",
-        content: "Acil tıp haberleri, kılavuzlar ve etkinlik takvimi.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap",
-      },
-    ],
-  }),
+      ...base.meta,
+    ];
+    if (settings.searchConsoleToken) {
+      meta.push({ name: "google-site-verification", content: settings.searchConsoleToken });
+    }
+
+    return {
+      meta,
+      links: [
+        { rel: "stylesheet", href: appCss },
+        { rel: "icon", href: settings.faviconUrl || defaultSettings.faviconUrl },
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        { rel: "stylesheet", href: fontHref(settings) },
+      ],
+      styles: [{ children: themeCss(settings) }],
+      scripts: settings.gaMeasurementId
+        ? [
+            {
+              src: `https://www.googletagmanager.com/gtag/js?id=${settings.gaMeasurementId}`,
+              async: true,
+            },
+            {
+              children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${settings.gaMeasurementId}');`,
+            },
+          ]
+        : [],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -118,7 +133,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="tr">
       <head>
         <HeadContent />
       </head>

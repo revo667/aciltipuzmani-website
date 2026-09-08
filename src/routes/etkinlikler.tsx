@@ -3,27 +3,22 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { CalendarDays, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { eventsQuery, formatDateRange, type EventItem } from "@/lib/content";
+import { eventsQuery, formatDateRange, settingsQuery, type EventItem } from "@/lib/content";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/etkinlikler")({
-  head: () => ({
-    meta: [
-      { title: "Etkinlik ve Kongre Takvimi — Acil Tıp Uzmanı" },
-      {
-        name: "description",
-        content:
-          "Acil tıp kongreleri, kursları ve sempozyumlarının güncel takvimi; tarih, şehir ve kayıt bilgileri.",
-      },
-      { property: "og:title", content: "Acil Tıp Etkinlik ve Kongre Takvimi" },
-      {
-        property: "og:description",
-        content: "Yaklaşan acil tıp kongreleri, kursları ve sempozyumları.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(eventsQuery()),
+  loader: async ({ context }) => {
+    const [, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(eventsQuery()),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
+    return { settings };
+  },
+  head: ({ loaderData }) =>
+    pageMeta(loaderData?.settings, {
+      title: loaderData?.settings.eventsTitle,
+      description: loaderData?.settings.eventsSubtitle,
+    }),
   component: EventsPage,
 });
 

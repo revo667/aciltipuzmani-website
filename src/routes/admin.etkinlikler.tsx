@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageField } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,30 +65,6 @@ function toLocalInput(value: string | null) {
 function AdminEvents() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function uploadCover(file: File) {
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `events/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
-        cacheControl: "31536000",
-        upsert: false,
-      });
-      if (error) throw error;
-      const { data, error: signErr } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signErr) throw signErr;
-      setDraft((d) => (d ? { ...d, cover_url: data.signedUrl } : d));
-      toast.success("Görsel yüklendi");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setUploading(false);
-    }
-  }
 
   const { data: events = [] } = useQuery({
     queryKey: ["admin", "events"],
@@ -282,27 +259,12 @@ function AdminEvents() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Afiş / görsel</Label>
-                {draft.cover_url ? (
-                  <img
-                    src={draft.cover_url}
-                    alt="Afiş önizleme"
-                    className="h-40 w-auto rounded-lg border border-border object-contain"
-                  />
-                ) : null}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void uploadCover(file);
-                  }}
-                />
-                <Input
-                  placeholder="veya görsel bağlantısı (https://...)"
+                <ImageField
+                  label="Afiş / görsel"
                   value={draft.cover_url}
-                  onChange={(e) => setDraft({ ...draft, cover_url: e.target.value })}
+                  onChange={(url) => setDraft({ ...draft, cover_url: url })}
+                  folder="events"
+                  hint="Etkinlik kartlarında ve etkinlik sayfasında görünür."
                 />
               </div>
               <div className="space-y-2">

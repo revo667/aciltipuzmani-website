@@ -1,13 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { linkGroups, linksByKindQuery } from "@/lib/content";
+import { defaultLinkGroups, linksByKindQuery, settingsQuery, type LinkGroup } from "@/lib/content";
 
 export const Route = createFileRoute("/kaynaklar/$kind")({
-  loader: ({ context, params }) =>
-    context.queryClient.ensureQueryData(linksByKindQuery(params.kind)),
-  head: ({ params }) => {
-    const group = linkGroups.find((g) => g.kind === params.kind);
+  loader: async ({ context, params }) => {
+    const [, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(linksByKindQuery(params.kind)),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
+    return { groups: settings.linkGroups as LinkGroup[] };
+  },
+  head: ({ params, loaderData }) => {
+    const groups = loaderData?.groups ?? defaultLinkGroups;
+    const group = groups.find((g) => g.kind === params.kind);
     if (!group) {
       return {
         meta: [
@@ -39,7 +45,8 @@ export const Route = createFileRoute("/kaynaklar/$kind")({
 function LinkGroupPage() {
   const { kind } = Route.useParams();
   const { data: links } = useSuspenseQuery(linksByKindQuery(kind));
-  const group = linkGroups.find((g) => g.kind === kind);
+  const { data: settings } = useQuery(settingsQuery());
+  const group = (settings?.linkGroups ?? defaultLinkGroups).find((g) => g.kind === kind);
 
   return (
     <div className="container-page py-14">

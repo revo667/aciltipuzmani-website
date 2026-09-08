@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AraRouteImport } from './routes/ara'
 import { Route as DisYazilarRouteImport } from './routes/dis-yazilar'
 import { Route as EtkinliklerRouteImport } from './routes/etkinlikler'
 import { Route as GirisRouteImport } from './routes/giris'
@@ -23,6 +24,7 @@ import { Route as AdminDislinklerRouteImport } from './routes/admin.dislinkler'
 import { Route as AdminEtkinliklerRouteImport } from './routes/admin.etkinlikler'
 import { Route as AdminKategorilerRouteImport } from './routes/admin.kategoriler'
 import { Route as AdminKullanicilarRouteImport } from './routes/admin.kullanicilar'
+import { Route as AdminMedyaRouteImport } from './routes/admin.medya'
 import { Route as AdminMenuRouteImport } from './routes/admin.menu'
 import { Route as AdminSayfalarRouteImport } from './routes/admin.sayfalar'
 import { Route as AdminYazilarRouteImport } from './routes/admin.yazilar'
@@ -42,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AraRoute = AraRouteImport.update({
+  id: '/ara',
+  path: '/ara',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DisYazilarRoute = DisYazilarRouteImport.update({
@@ -104,6 +111,11 @@ const AdminKullanicilarRoute = AdminKullanicilarRouteImport.update({
   path: '/kullanicilar',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminMedyaRoute = AdminMedyaRouteImport.update({
+  id: '/medya',
+  path: '/medya',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMenuRoute = AdminMenuRouteImport.update({
   id: '/menu',
   path: '/menu',
@@ -158,6 +170,7 @@ const SayfaSlugRoute = SayfaSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/ara': typeof AraRoute
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
@@ -169,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
   '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
+  '/admin/medya': typeof AdminMedyaRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
@@ -183,6 +197,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ara': typeof AraRoute
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
@@ -194,6 +209,7 @@ export interface FileRoutesByTo {
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
   '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
+  '/admin/medya': typeof AdminMedyaRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
@@ -210,6 +226,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/ara': typeof AraRoute
   '/dis-yazilar': typeof DisYazilarRoute
   '/etkinlikler': typeof EtkinliklerRoute
   '/giris': typeof GirisRoute
@@ -221,6 +238,7 @@ export interface FileRoutesById {
   '/admin/etkinlikler': typeof AdminEtkinliklerRoute
   '/admin/kategoriler': typeof AdminKategorilerRoute
   '/admin/kullanicilar': typeof AdminKullanicilarRoute
+  '/admin/medya': typeof AdminMedyaRoute
   '/admin/menu': typeof AdminMenuRoute
   '/admin/sayfalar': typeof AdminSayfalarRoute
   '/admin/yazilar': typeof AdminYazilarRoute
@@ -238,6 +256,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/ara'
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
@@ -249,6 +268,7 @@ export interface FileRouteTypes {
     | '/admin/etkinlikler'
     | '/admin/kategoriler'
     | '/admin/kullanicilar'
+    | '/admin/medya'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
@@ -263,6 +283,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ara'
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
@@ -274,6 +295,7 @@ export interface FileRouteTypes {
     | '/admin/etkinlikler'
     | '/admin/kategoriler'
     | '/admin/kullanicilar'
+    | '/admin/medya'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
@@ -289,6 +311,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/ara'
     | '/dis-yazilar'
     | '/etkinlikler'
     | '/giris'
@@ -300,6 +323,7 @@ export interface FileRouteTypes {
     | '/admin/etkinlikler'
     | '/admin/kategoriler'
     | '/admin/kullanicilar'
+    | '/admin/medya'
     | '/admin/menu'
     | '/admin/sayfalar'
     | '/admin/yazilar'
@@ -316,6 +340,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AraRoute: typeof AraRoute
   DisYazilarRoute: typeof DisYazilarRoute
   EtkinliklerRoute: typeof EtkinliklerRoute
   GirisRoute: typeof GirisRoute
@@ -342,6 +367,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ara': {
+      id: '/ara'
+      path: '/ara'
+      fullPath: '/ara'
+      preLoaderRoute: typeof AraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dis-yazilar': {
@@ -428,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminKullanicilarRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/medya': {
+      id: '/admin/medya'
+      path: '/medya'
+      fullPath: '/admin/medya'
+      preLoaderRoute: typeof AdminMedyaRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/menu': {
       id: '/admin/menu'
       path: '/menu'
@@ -510,6 +549,7 @@ interface AdminRouteChildren {
   AdminEtkinliklerRoute: typeof AdminEtkinliklerRoute
   AdminKategorilerRoute: typeof AdminKategorilerRoute
   AdminKullanicilarRoute: typeof AdminKullanicilarRoute
+  AdminMedyaRoute: typeof AdminMedyaRoute
   AdminMenuRoute: typeof AdminMenuRoute
   AdminSayfalarRoute: typeof AdminSayfalarRoute
   AdminYazilarRoute: typeof AdminYazilarRoute
@@ -525,6 +565,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminEtkinliklerRoute: AdminEtkinliklerRoute,
   AdminKategorilerRoute: AdminKategorilerRoute,
   AdminKullanicilarRoute: AdminKullanicilarRoute,
+  AdminMedyaRoute: AdminMedyaRoute,
   AdminMenuRoute: AdminMenuRoute,
   AdminSayfalarRoute: AdminSayfalarRoute,
   AdminYazilarRoute: AdminYazilarRoute,
@@ -536,6 +577,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AraRoute: AraRoute,
   DisYazilarRoute: DisYazilarRoute,
   EtkinliklerRoute: EtkinliklerRoute,
   GirisRoute: GirisRoute,

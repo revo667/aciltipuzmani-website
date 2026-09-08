@@ -339,3 +339,43 @@
 }
 
 .rich-text pre code { background: none; padding: 0; }
+
+/* ── Yönetim panelindeki görsel editör (TipTap) ─────────────────────
+   İçerik alanı sitedeki .rich-text stillerini kullanır; burada yalnızca
+   düzenleme sırasında gereken ek işaretler var. */
+
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Editörde tablo hücreleri her zaman görünür olsun (boş tablo da dahil) */
+.ProseMirror table {
+  display: table;
+  table-layout: fixed;
+}
+
+.ProseMirror .selectedCell {
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  cursor: col-resize;
+}
+
+.ProseMirror img.ProseMirror-selectednode {
+  outline: 2px solid var(--primary);
+}

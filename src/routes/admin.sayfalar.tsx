@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TaxonomyPicker } from "@/components/admin/TaxonomyPicker";
+import { RichEditor } from "@/components/admin/RichEditor";
+import { ImageField } from "@/components/admin/ImageField";
+import { SeoFields, type SeoDraft } from "@/components/admin/SeoFields";
 import { categoriesQuery, slugify, tagsQuery, type PageItem } from "@/lib/content";
 import { createCategory, createTag, savePageTaxonomy } from "@/lib/taxonomy";
 
@@ -31,7 +35,7 @@ export const Route = createFileRoute("/admin/sayfalar")({
   component: AdminPages,
 });
 
-type Draft = {
+type Draft = SeoDraft & {
   id?: string;
   title: string;
   slug: string;
@@ -54,35 +58,14 @@ const emptyDraft: Draft = {
   sort_order: 0,
   categoryIds: [],
   tagIds: [],
+  seo_title: "",
+  seo_description: "",
+  og_image_url: "",
 };
 
 function AdminPages() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function uploadCover(file: File) {
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `pages/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
-        cacheControl: "31536000",
-        upsert: false,
-      });
-      if (error) throw error;
-      const { data, error: signErr } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signErr) throw signErr;
-      setDraft((d) => (d ? { ...d, cover_url: data.signedUrl } : d));
-      toast.success("Görsel yüklendi");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setUploading(false);
-    }
-  }
 
   const { data: pages = [] } = useQuery({
     queryKey: ["admin", "pages"],
@@ -156,6 +139,9 @@ function AdminPages() {
         cover_url: input.cover_url || null,
         status: input.status,
         sort_order: Number(input.sort_order) || 0,
+        seo_title: input.seo_title || null,
+        seo_description: input.seo_description || null,
+        og_image_url: input.og_image_url || null,
       };
       let pageId = input.id;
       if (pageId) {
@@ -218,6 +204,13 @@ function AdminPages() {
               <p className="mt-1 truncate text-xs text-muted-foreground">/sayfa/{page.slug}</p>
             </div>
             <div className="flex shrink-0 gap-2">
+              {page.status === "published" ? (
+                <Button size="sm" variant="outline" asChild title="Sitede görüntüle">
+                  <a href={`/sayfa/${page.slug}`} target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" />
+                  </a>
+                </Button>
+              ) : null}
               <Button
                 size="sm"
                 variant="outline"
@@ -233,6 +226,9 @@ function AdminPages() {
                     sort_order: page.sort_order,
                     categoryIds: categoryIdsOf(page.id),
                     tagIds: tagIdsOf(page.id),
+                    seo_title: page.seo_title ?? "",
+                    seo_description: page.seo_description ?? "",
+                    og_image_url: page.og_image_url ?? "",
                   })
                 }
               >
@@ -242,7 +238,8 @@ function AdminPages() {
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  if (confirm("Silinsin mi?")) remove.mutate(page.id);
+                  if (confirm(`"${page.title}" silinsin mi? Bu işlem geri alınamaz.`))
+                    remove.mutate(page.id);
                 }}
               >
                 <Trash2 className="size-4" />
@@ -253,119 +250,128 @@ function AdminPages() {
       </div>
 
       <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>{draft?.id ? "Sayfayı düzenle" : "Yeni sayfa"}</DialogTitle>
           </DialogHeader>
           {draft ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Başlık</Label>
-                <Input
-                  value={draft.title}
-                  onChange={(e) => {
-                    const title = e.target.value;
-                    setDraft({
-                      ...draft,
-                      title,
-                      slug: draft.id ? draft.slug : slugify(title),
-                    });
-                  }}
+            <Tabs defaultValue="content">
+              <TabsList>
+                <TabsTrigger value="content">İçerik</TabsTrigger>
+                <TabsTrigger value="settings">Yayın & sınıflandırma</TabsTrigger>
+                <TabsTrigger value="seo">SEO & paylaşım</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="content" className="mt-5 space-y-4">
+                <div className="space-y-2">
+                  <Label>Başlık</Label>
+                  <Input
+                    value={draft.title}
+                    onChange={(e) => {
+                      const title = e.target.value;
+                      setDraft({ ...draft, title, slug: draft.id ? draft.slug : slugify(title) });
+                    }}
+                  />
+                </div>
+
+                <ImageField
+                  label="Kapak görseli"
+                  value={draft.cover_url}
+                  onChange={(url) => setDraft({ ...draft, cover_url: url })}
+                  folder="pages"
+                  hint="Sayfanın en üstünde başlığın altında görünür. Boş bırakabilirsiniz."
                 />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+
+                <div className="space-y-2">
+                  <Label>Özet</Label>
+                  <Textarea
+                    rows={2}
+                    value={draft.excerpt}
+                    onChange={(e) => setDraft({ ...draft, excerpt: e.target.value })}
+                    placeholder="Başlığın hemen altında görünen giriş cümlesi."
+                  />
+                </div>
+
+                <RichEditor
+                  label="İçerik"
+                  value={draft.content}
+                  onChange={(html) => setDraft({ ...draft, content: html })}
+                  folder="pages"
+                />
+              </TabsContent>
+
+              <TabsContent value="settings" className="mt-5 space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Durum</Label>
+                    <Select
+                      value={draft.status}
+                      onValueChange={(v) => setDraft({ ...draft, status: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="published">Yayında</SelectItem>
+                        <SelectItem value="draft">Taslak</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Sıra</Label>
+                    <Input
+                      type="number"
+                      value={draft.sort_order}
+                      onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })}
+                    />
+                    <p className="text-xs text-muted-foreground">Küçük sayı önce gelir.</p>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Adres (slug)</Label>
                   <Input
                     value={draft.slug}
                     onChange={(e) => setDraft({ ...draft, slug: e.target.value })}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Adres: /sayfa/{draft.slug || slugify(draft.title) || "…"} — menüye eklemek için
+                    Menü ekranında bu adresi kullanın.
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <Label>Durum</Label>
-                  <Select
-                    value={draft.status}
-                    onValueChange={(v) => setDraft({ ...draft, status: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="published">Yayında</SelectItem>
-                      <SelectItem value="draft">Taslak</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <TaxonomyPicker
-                label="Kategoriler"
-                items={categories}
-                selected={draft.categoryIds}
-                onChange={(ids) => setDraft({ ...draft, categoryIds: ids })}
-                onCreate={(name) => addCategory.mutate(name)}
-                creating={addCategory.isPending}
-                placeholder="Yeni kategori adı"
-              />
 
-              <TaxonomyPicker
-                label="Etiketler"
-                items={tags}
-                selected={draft.tagIds}
-                onChange={(ids) => setDraft({ ...draft, tagIds: ids })}
-                onCreate={(name) => addTag.mutate(name)}
-                creating={addTag.isPending}
-                placeholder="Yeni etiket adı"
-              />
+                <TaxonomyPicker
+                  label="Kategoriler"
+                  items={categories}
+                  selected={draft.categoryIds}
+                  onChange={(ids) => setDraft({ ...draft, categoryIds: ids })}
+                  onCreate={(name) => addCategory.mutate(name)}
+                  creating={addCategory.isPending}
+                  placeholder="Yeni kategori adı"
+                />
 
-              <div className="space-y-2">
-                <Label>Kapak görseli</Label>
-                {draft.cover_url ? (
-                  <img
-                    src={draft.cover_url}
-                    alt="Kapak önizleme"
-                    className="h-32 w-auto rounded-lg border border-border object-cover"
-                  />
-                ) : null}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void uploadCover(file);
-                  }}
+                <TaxonomyPicker
+                  label="Etiketler"
+                  items={tags}
+                  selected={draft.tagIds}
+                  onChange={(ids) => setDraft({ ...draft, tagIds: ids })}
+                  onCreate={(name) => addTag.mutate(name)}
+                  creating={addTag.isPending}
+                  placeholder="Yeni etiket adı"
                 />
-                <Input
-                  placeholder="veya görsel bağlantısı (https://...)"
-                  value={draft.cover_url}
-                  onChange={(e) => setDraft({ ...draft, cover_url: e.target.value })}
+              </TabsContent>
+
+              <TabsContent value="seo" className="mt-5">
+                <SeoFields
+                  draft={draft}
+                  onChange={(patch) => setDraft({ ...draft, ...patch })}
+                  fallbackTitle={draft.title}
+                  fallbackDescription={draft.excerpt}
+                  fallbackImage={draft.cover_url}
+                  folder="pages"
                 />
-              </div>
-              <div className="space-y-2">
-                <Label>Özet</Label>
-                <Textarea
-                  rows={2}
-                  value={draft.excerpt}
-                  onChange={(e) => setDraft({ ...draft, excerpt: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>İçerik</Label>
-                <Textarea
-                  rows={12}
-                  value={draft.content}
-                  onChange={(e) => setDraft({ ...draft, content: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Sıra</Label>
-                <Input
-                  type="number"
-                  value={draft.sort_order}
-                  onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })}
-                />
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDraft(null)}>
@@ -375,7 +381,7 @@ function AdminPages() {
               disabled={save.isPending || !draft?.title}
               onClick={() => draft && save.mutate(draft)}
             >
-              Kaydet
+              {save.isPending ? "Kaydediliyor…" : "Kaydet"}
             </Button>
           </DialogFooter>
         </DialogContent>

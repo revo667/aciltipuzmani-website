@@ -1,38 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { linksQuery } from "@/lib/content";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { defaultSettings, linksQuery, settingsQuery } from "@/lib/content";
 import { LogoWall } from "@/components/site/LogoWall";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/kaynaklar/")({
-  head: () => ({
-    meta: [
-      { title: "Dernekler ve Bilimsel Yayınlar — Acil Tıp Uzmanı" },
-      {
-        name: "description",
-        content:
-          "Acil tıp dernekleri ve hakemli bilimsel yayınların güncel bağlantı rehberi. Tek sayfada tüm kaynaklar.",
-      },
-      { property: "og:title", content: "Acil Tıp Dernekleri ve Bilimsel Yayınlar" },
-      {
-        property: "og:description",
-        content: "Acil tıp dernekleri ve dergilerine hızlı erişim rehberi.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(linksQuery()),
+  loader: async ({ context }) => {
+    const [, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(linksQuery()),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
+    return { settings };
+  },
+  head: ({ loaderData }) =>
+    pageMeta(loaderData?.settings, {
+      title: loaderData?.settings.linksTitle ?? defaultSettings.linksTitle,
+      description: loaderData?.settings.linksSubtitle ?? defaultSettings.linksSubtitle,
+    }),
   component: ResourcesPage,
 });
 
 function ResourcesPage() {
   const { data: links } = useSuspenseQuery(linksQuery());
+  const { data: settings } = useQuery(settingsQuery());
 
   return (
     <div className="container-page py-14">
-      <h1 className="text-3xl font-semibold md:text-4xl">Dernekler ve yayınlar</h1>
+      <h1 className="text-3xl font-semibold md:text-4xl">
+        {settings?.linksTitle ?? defaultSettings.linksTitle}
+      </h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Acil tıp camiasının dernekleri ve hakemli dergilerine hızlı erişim.
+        {settings?.linksSubtitle ?? defaultSettings.linksSubtitle}
       </p>
 
       <div className="mt-12">

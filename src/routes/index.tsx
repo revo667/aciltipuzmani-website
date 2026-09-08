@@ -18,25 +18,9 @@ import {
   type HomeTaxonomy,
   type PostCard,
 } from "@/lib/content";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Acil Tıp Uzmanı — Acil Tıp Haber ve Etkinlik Merkezi" },
-      {
-        name: "description",
-        content:
-          "Türkiye acil tıp camiası için güncel haberler, kongre ve kurs takvimi, dernek ve bilimsel yayın bağlantıları.",
-      },
-      { property: "og:title", content: "Acil Tıp Uzmanı — Acil Tıp Buluşma Noktası" },
-      {
-        property: "og:description",
-        content: "Acil tıp haberleri, kongre takvimi ve bilimsel yayın kaynakları tek adreste.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
   loader: async ({ context }) => {
     // Etkinlik sayisi ayara bagli oldugu icin once ayarlar cekilir.
     const settings = await context.queryClient.ensureQueryData(settingsQuery());
@@ -47,7 +31,9 @@ export const Route = createFileRoute("/")({
       context.queryClient.ensureQueryData(externalArticlesQuery()),
       context.queryClient.ensureQueryData(homeTaxonomyQuery()),
     ]);
+    return { settings };
   },
+  head: ({ loaderData }) => pageMeta(loaderData?.settings),
   component: Home,
 });
 

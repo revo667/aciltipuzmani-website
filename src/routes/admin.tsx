@@ -13,6 +13,7 @@ import {
   Settings,
   Tags,
   Home,
+  Images,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,7 @@ const items = [
   { to: "/admin/anasayfa", label: "Anasayfa", icon: Home },
   { to: "/admin/yazilar", label: "Yazılar", icon: FileText },
   { to: "/admin/kategoriler", label: "Kategori & Etiket", icon: Tags },
+  { to: "/admin/medya", label: "Medya", icon: Images },
   { to: "/admin/etkinlikler", label: "Etkinlikler", icon: CalendarDays },
   { to: "/admin/baglantilar", label: "Dernek & Yayın", icon: LinkIcon },
   { to: "/admin/dislinkler", label: "Dış Linkler", icon: Globe },

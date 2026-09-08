@@ -19,9 +19,7 @@ export function LogoMarquee({ links, title, speed = 40 }: LogoMarqueeProps) {
       {title ? (
         <div className="mb-8 flex items-center gap-4">
           <span className="hidden h-px flex-1 bg-primary/40 sm:block" />
-          <h2 className="text-center text-xl font-semibold text-primary md:text-2xl">
-            {title}
-          </h2>
+          <h2 className="text-center text-xl font-semibold text-primary md:text-2xl">{title}</h2>
           <span className="hidden h-px flex-1 bg-primary/40 sm:block" />
         </div>
       ) : null}

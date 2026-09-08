@@ -11,7 +11,9 @@ function useCount(table: "posts" | "events" | "links") {
   return useQuery({
     queryKey: ["count", table],
     queryFn: async () => {
-      const { count, error } = await supabase.from(table).select("id", { count: "exact", head: true });
+      const { count, error } = await supabase
+        .from(table)
+        .select("id", { count: "exact", head: true });
       if (error) throw error;
       return count ?? 0;
     },
@@ -32,9 +34,7 @@ function AdminHome() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Yönetim özeti</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Site içeriğini buradan yönetebilirsiniz.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">Site içeriğini buradan yönetebilirsiniz.</p>
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {cards.map((card) => (
           <Link key={card.title} to={card.to}>

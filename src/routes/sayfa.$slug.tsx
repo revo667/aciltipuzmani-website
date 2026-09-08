@@ -1,37 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { pageQuery } from "@/lib/content";
+import { pageQuery, settingsQuery } from "@/lib/content";
 import { RichText } from "@/components/site/RichText";
 import { ContentTaxonomy } from "@/components/site/ContentTaxonomy";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/sayfa/$slug")({
-  loader: ({ context, params }) => context.queryClient.ensureQueryData(pageQuery(params.slug)),
+  loader: async ({ context, params }) => {
+    const [page, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(pageQuery(params.slug)),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
+    return { page, settings };
+  },
   head: ({ loaderData }) => {
-    const page = loaderData ?? null;
+    const page = loaderData?.page ?? null;
     if (!page) {
-      return {
-        meta: [
-          { title: "Sayfa bulunamadı — Acil Tıp Uzmanı" },
-          { name: "robots", content: "noindex" },
-        ],
-      };
+      return pageMeta(loaderData?.settings, { title: "Sayfa bulunamadı", noindex: true });
     }
-    const description = page.excerpt ?? `${page.title} — Acil Tıp Uzmanı`;
-    return {
-      meta: [
-        { title: `${page.title} — Acil Tıp Uzmanı` },
-        { name: "description", content: description.slice(0, 155) },
-        { property: "og:title", content: page.title },
-        { property: "og:description", content: description.slice(0, 155) },
-        { property: "og:type", content: "article" },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-    };
+    return pageMeta(loaderData?.settings, {
+      title: page.seo_title || page.title,
+      description: page.seo_description || page.excerpt || "",
+      image: page.og_image_url || page.cover_url || "",
+      type: "article",
+      noindex: page.status !== "published",
+    });
   },
   errorComponent: () => (
-    <div className="container-page py-20 text-center text-muted-foreground">
-      Sayfa yüklenemedi.
-    </div>
+    <div className="container-page py-20 text-center text-muted-foreground">Sayfa yüklenemedi.</div>
   ),
   notFoundComponent: () => (
     <div className="container-page py-20 text-center text-muted-foreground">Sayfa bulunamadı.</div>

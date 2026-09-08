@@ -1,5 +1,26 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+/**
+ * Asagidaki kullanici yonetimi fonksiyonlari service role anahtarini kullanir,
+ * yani RLS'i tamamen atlar. Bu yuzden cagiranin gercekten yonetici oldugu
+ * her cagride sunucuda dogrulanir.
+ */
+const requireAdmin = createMiddleware({ type: "function" })
+  .middleware([requireSupabaseAuth])
+  .server(async ({ next, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (error) throw new Error("Yetki doğrulanamadı.");
+    if (!data) throw new Error("Bu işlem için yönetici yetkisi gerekiyor.");
+    return next();
+  });
 
 function matches(input: string, expected: string) {
   const a = createHash("sha256").update(input, "utf8").digest();
@@ -26,7 +47,10 @@ export const adminLogin = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Kullanıcı adı veya şifre hatalı." };
     }
 
-    const email = `${expectedUser.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "")}@aciltipuzmani.com`;
+    const email = `${expectedUser
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "")}@aciltipuzmani.com`;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -60,4 +84,86 @@ export const adminLogin = createServerFn({ method: "POST" })
       .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
 
     return { ok: true as const, email };
+  });
+
+/** Panelde kullanicilarin e-postasini gostermek icin; auth.users istemciden okunamaz. */
+export const listAdminUsers = createServerFn({ method: "GET" })
+  .middleware([requireAdmin])
+  .handler(async () => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    if (error) return { ok: false as const, error: error.message };
+
+    return {
+      ok: true as const,
+      users: data.users.map((u) => ({
+        id: u.id,
+        email: u.email ?? "",
+        createdAt: u.created_at,
+        lastSignInAt: u.last_sign_in_at ?? null,
+      })),
+    };
+  });
+
+/** Yeni editor/yonetici hesabi olusturur ve rolunu atar. */
+export const createStaffUser = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .inputValidator((data: { email: string; password: string; role: "admin" | "editor" }) => data)
+  .handler(async ({ data }) => {
+    const email = data.email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return { ok: false as const, error: "Geçerli bir e-posta adresi girin." };
+    }
+    if (data.password.length < 8) {
+      return { ok: false as const, error: "Şifre en az 8 karakter olmalı." };
+    }
+    if (data.role !== "admin" && data.role !== "editor") {
+      return { ok: false as const, error: "Geçersiz rol." };
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: data.password,
+      email_confirm: true,
+    });
+    if (error || !created.user) {
+      return { ok: false as const, error: error?.message ?? "Hesap oluşturulamadı." };
+    }
+
+    const { error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .upsert({ user_id: created.user.id, role: data.role }, { onConflict: "user_id,role" });
+    if (roleError) return { ok: false as const, error: roleError.message };
+
+    return { ok: true as const, email };
+  });
+
+/** Kullanicinin sifresini yonetici olarak degistirir. */
+export const resetStaffPassword = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .inputValidator((data: { userId: string; password: string }) => data)
+  .handler(async ({ data }) => {
+    if (data.password.length < 8) {
+      return { ok: false as const, error: "Şifre en az 8 karakter olmalı." };
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.password,
+    });
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
+  });
+
+/** Kullaniciyi tamamen siler. */
+export const deleteStaffUser = createServerFn({ method: "POST" })
+  .middleware([requireAdmin])
+  .inputValidator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
+    if (error) return { ok: false as const, error: error.message };
+    return { ok: true as const };
   });

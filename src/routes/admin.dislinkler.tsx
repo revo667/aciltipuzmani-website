@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageField } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,30 +46,6 @@ const emptyDraft: Draft = {
 function AdminExternalArticles() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [uploading, setUploading] = useState(false);
-
-  async function uploadCover(file: File) {
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `external_articles/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
-        cacheControl: "31536000",
-        upsert: false,
-      });
-      if (error) throw error;
-      const { data, error: signErr } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signErr) throw signErr;
-      setDraft((d) => (d ? { ...d, cover_url: data.signedUrl } : d));
-      toast.success("Kapak görseli yüklendi");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setUploading(false);
-    }
-  }
 
   const { data: articles = [] } = useQuery({
     queryKey: ["admin", "external_articles"],
@@ -97,7 +74,10 @@ function AdminExternalArticles() {
         sort_order: Number(input.sort_order) || 0,
       };
       if (input.id) {
-        const { error } = await supabase.from("external_articles").update(payload).eq("id", input.id);
+        const { error } = await supabase
+          .from("external_articles")
+          .update(payload)
+          .eq("id", input.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("external_articles").insert(payload);
@@ -234,7 +214,9 @@ function AdminExternalArticles() {
                   <Input
                     type="number"
                     value={draft.sort_order}
-                    onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })
+                    }
                   />
                 </div>
               </div>
@@ -255,33 +237,12 @@ function AdminExternalArticles() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Kapak görseli</Label>
-                {draft.cover_url ? (
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={draft.cover_url}
-                      alt=""
-                      className="size-16 rounded-lg border border-border object-cover"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDraft({ ...draft, cover_url: "" })}
-                    >
-                      Kaldır
-                    </Button>
-                  </div>
-                ) : (
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    disabled={uploading}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void uploadCover(file);
-                    }}
-                  />
-                )}
+                <ImageField
+                  label="Kapak görseli"
+                  value={draft.cover_url}
+                  onChange={(url) => setDraft({ ...draft, cover_url: url })}
+                  folder="external_articles"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Durum</Label>

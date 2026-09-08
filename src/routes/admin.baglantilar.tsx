@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ImageField } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +16,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { LinkItem } from "@/lib/content";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { defaultSettings, settingsQuery, type LinkItem } from "@/lib/content";
 
 export const Route = createFileRoute("/admin/baglantilar")({
   component: AdminLinks,
@@ -33,6 +40,7 @@ type Draft = {
 
 const emptyDraft: Draft = { name: "", url: "", logo_url: "", kind: "dernek", sort_order: 0 };
 
+/** Panelde bolum adi yoksa gosterilecek yedek etiketler. */
 const kindLabels: Record<string, string> = {
   yayin: "Dernek Yayını (Dergi)",
   dernek: "Acil Tıp Derneği",
@@ -40,34 +48,15 @@ const kindLabels: Record<string, string> = {
   kaynak: "Acil Tıp Web Sitesi",
 };
 
-
 function AdminLinks() {
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [uploading, setUploading] = useState(false);
 
-  async function uploadLogo(file: File) {
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() ?? "png";
-      const path = `links/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage.from("media").upload(path, file, {
-        cacheControl: "31536000",
-        upsert: false,
-      });
-      if (error) throw error;
-      const { data, error: signErr } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signErr) throw signErr;
-      setDraft((d) => (d ? { ...d, logo_url: data.signedUrl } : d));
-      toast.success("Logo yüklendi");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setUploading(false);
-    }
-  }
+  // Bolum listesi Arayuz > Bolumler ekranindan yonetiliyor.
+  const { data: settings } = useQuery(settingsQuery());
+  const groups = settings?.linkGroups ?? defaultSettings.linkGroups;
+  const titleOfKind = (kind: string) =>
+    groups.find((g) => g.kind === kind)?.title ?? kindLabels[kind] ?? kind;
 
   const { data: links = [] } = useQuery({
     queryKey: ["admin", "links"],
@@ -145,11 +134,11 @@ function AdminLinks() {
                 />
               ) : null}
               <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate font-medium">{link.name}</h2>
-                <Badge variant="outline">{kindLabels[link.kind] ?? link.kind}</Badge>
-              </div>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{link.url}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate font-medium">{link.name}</h2>
+                  <Badge variant="outline">{titleOfKind(link.kind)}</Badge>
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{link.url}</p>
               </div>
             </div>
             <div className="flex shrink-0 gap-2">
@@ -205,27 +194,12 @@ function AdminLinks() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Logo</Label>
-                {draft.logo_url ? (
-                  <img
-                    src={draft.logo_url}
-                    alt="Logo önizleme"
-                    className="h-20 w-auto rounded-lg border border-border bg-white object-contain p-2"
-                  />
-                ) : null}
-                <Input
-                  type="file"
-                  accept="image/*"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) void uploadLogo(file);
-                  }}
-                />
-                <Input
-                  placeholder="veya logo bağlantısı (https://...)"
+                <ImageField
+                  label="Logo"
                   value={draft.logo_url}
-                  onChange={(e) => setDraft({ ...draft, logo_url: e.target.value })}
+                  onChange={(url) => setDraft({ ...draft, logo_url: url })}
+                  folder="links"
+                  hint="Beyaz zeminde iyi duran, şeffaf PNG tercih edin."
                 />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -236,10 +210,11 @@ function AdminLinks() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="yayin">Dernek Yayını (Dergi)</SelectItem>
-                      <SelectItem value="dernek">Acil Tıp Derneği</SelectItem>
-                      <SelectItem value="klinik">Acil Tıp Kliniği Web Sitesi</SelectItem>
-                      <SelectItem value="kaynak">Acil Tıp Web Sitesi</SelectItem>
+                      {groups.map((group) => (
+                        <SelectItem key={group.kind} value={group.kind}>
+                          {group.title}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

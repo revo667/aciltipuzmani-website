@@ -2,27 +2,22 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate, postsQuery } from "@/lib/content";
+import { formatDate, postsQuery, settingsQuery } from "@/lib/content";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/haberler/")({
-  head: () => ({
-    meta: [
-      { title: "Haberler ve Rehberler — Acil Tıp Uzmanı" },
-      {
-        name: "description",
-        content:
-          "Acil tıp alanındaki güncel haberler, klinik rehberler ve eğitim içerikleri tek listede.",
-      },
-      { property: "og:title", content: "Acil Tıp Haberleri ve Rehberleri" },
-      {
-        property: "og:description",
-        content: "Acil tıp camiasından güncel haberler ve klinik rehber içerikleri.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(postsQuery()),
+  loader: async ({ context }) => {
+    const [, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(postsQuery()),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
+    return { settings };
+  },
+  head: ({ loaderData }) =>
+    pageMeta(loaderData?.settings, {
+      title: loaderData?.settings.newsTitle,
+      description: loaderData?.settings.newsSubtitle,
+    }),
   component: PostsPage,
 });
 

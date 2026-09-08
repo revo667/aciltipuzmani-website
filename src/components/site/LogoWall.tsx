@@ -1,23 +1,28 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink } from "lucide-react";
-import { linkGroups, type LinkGroup, type LinkItem } from "@/lib/content";
+import { defaultSettings, settingsQuery, type LinkGroup, type LinkItem } from "@/lib/content";
 import { LogoMarquee } from "@/components/site/LogoMarquee";
 
 export function LogoWall({
   links,
-  groups = linkGroups,
+  groups,
   showDisclaimer = true,
   marquee = false,
   showAllLink = true,
 }: {
   links: LinkItem[];
+  /** Verilmezse panelden yonetilen bolum listesi kullanilir. */
   groups?: LinkGroup[];
   showDisclaimer?: boolean;
   marquee?: boolean;
   /** Bolum basliginin sagindaki "Tümü" sekmesi. */
   showAllLink?: boolean;
 }) {
-  const visible = groups
+  const { data: settings } = useQuery(settingsQuery());
+  const activeGroups = groups ?? settings?.linkGroups ?? defaultSettings.linkGroups;
+
+  const visible = activeGroups
     .map((g) => ({ ...g, items: links.filter((l) => l.kind === g.kind) }))
     .filter((g) => g.items.length > 0);
 
@@ -79,10 +84,9 @@ export function LogoWall({
         </section>
       ))}
 
-      {showDisclaimer ? (
+      {showDisclaimer && (settings?.showDisclaimer ?? true) ? (
         <p className="border-y-2 border-primary/70 py-6 text-center text-base font-semibold md:text-lg">
-          Sitede yer alan yazılar bilgi amaçlı olup, hastalar için kullanılmamalıdır. Her hasta
-          kendine özeldir.
+          {settings?.disclaimerText ?? defaultSettings.disclaimerText}
         </p>
       ) : null}
     </div>

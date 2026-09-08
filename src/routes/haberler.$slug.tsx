@@ -4,30 +4,31 @@ import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { RichText } from "@/components/site/RichText";
 import { ContentTaxonomy } from "@/components/site/ContentTaxonomy";
-import { formatDate, postQuery } from "@/lib/content";
+import { formatDate, postQuery, settingsQuery } from "@/lib/content";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/haberler/$slug")({
   loader: async ({ context, params }) => {
-    const post = await context.queryClient.ensureQueryData(postQuery(params.slug));
+    const [post, settings] = await Promise.all([
+      context.queryClient.ensureQueryData(postQuery(params.slug)),
+      context.queryClient.ensureQueryData(settingsQuery()),
+    ]);
     if (!post || post.status !== "published") throw notFound();
-    return { title: post.title, excerpt: post.excerpt ?? "" };
+    return { post, settings };
   },
   head: ({ loaderData }) => {
     if (!loaderData) {
-      return {
-        meta: [{ title: "İçerik bulunamadı — Acil Tıp Uzmanı" }, { name: "robots", content: "noindex" }],
-      };
+      return pageMeta(undefined, { title: "İçerik bulunamadı", noindex: true });
     }
-    return {
-      meta: [
-        { title: `${loaderData.title} — Acil Tıp Uzmanı` },
-        { name: "description", content: loaderData.excerpt.slice(0, 155) },
-        { property: "og:title", content: loaderData.title },
-        { property: "og:description", content: loaderData.excerpt.slice(0, 155) },
-        { property: "og:type", content: "article" },
-        { name: "twitter:card", content: "summary_large_image" },
-      ],
-    };
+    const { post, settings } = loaderData;
+    // Panelden SEO alani doldurulmadiysa yazinin kendi baslik/ozet/kapagi kullanilir.
+    return pageMeta(settings, {
+      title: post.seo_title || post.title,
+      description: post.seo_description || post.excerpt || "",
+      image: post.og_image_url || post.cover_url || "",
+      type: "article",
+      publishedTime: post.published_at,
+    });
   },
   notFoundComponent: PostNotFound,
   component: PostDetail,

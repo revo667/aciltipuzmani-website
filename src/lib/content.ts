@@ -11,6 +11,9 @@ export type Post = {
   status: string;
   published_at: string | null;
   created_at: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_image_url: string | null;
 };
 
 export type EventItem = {
@@ -92,7 +95,98 @@ export type GeneralSettings = {
   homeEventsEnabled: boolean;
   homeEventsLimit: number;
   homeLinksEnabled: boolean;
+
+  /* Marka — logo, favicon, basliktaki metin */
+  logoUrl: string;
+  faviconUrl: string;
+  /** Header'daki logonun yuksekligi, piksel. */
+  logoHeight: number;
+  showBrandText: boolean;
+
+  /* Tema — renkler, kose yuvarlakligi, yazi tipleri */
+  themePrimary: string;
+  themeBrandDeep: string;
+  themeAccent: string;
+  /** Kose yuvarlakligi, piksel. */
+  themeRadius: number;
+  fontDisplay: string;
+  fontBody: string;
+
+  /* SEO & analitik */
+  seoTitle: string;
+  seoDescription: string;
+  seoOgImageUrl: string;
+  twitterHandle: string;
+  gaMeasurementId: string;
+  searchConsoleToken: string;
+  /** Acikken tum siteye noindex verilir; yayina hazirlik icin. */
+  seoNoindex: boolean;
+
+  /* Alt bilgi (footer) */
+  footerAbout: string;
+  footerColumns: FooterColumn[];
+  socialLinks: SocialLink[];
+  contactPhone: string;
+  contactAddress: string;
+  /** "{yil}" yerine icinde bulunulan yil yazilir. */
+  copyright: string;
+
+  /* Kaynak sayfasi altindaki sorumluluk metni */
+  showDisclaimer: boolean;
+  disclaimerText: string;
+
+  /* Hata sayfalari */
+  notFoundTitle: string;
+  notFoundMessage: string;
+  notFoundButton: string;
+  errorTitle: string;
+  errorMessage: string;
+
+  /* Dernek & yayin bolum basliklari */
+  linkGroups: LinkGroup[];
+
+  /* Site ici arama */
+  searchEnabled: boolean;
 };
+
+export type NavLink = { label: string; href: string };
+export type FooterColumn = { title: string; links: NavLink[] };
+export type SocialKind =
+  "facebook" | "x" | "instagram" | "youtube" | "linkedin" | "whatsapp" | "telegram";
+export type SocialLink = { kind: SocialKind; url: string };
+export type LinkGroup = { kind: string; title: string };
+
+export const socialKinds: SocialKind[] = [
+  "facebook",
+  "x",
+  "instagram",
+  "youtube",
+  "linkedin",
+  "whatsapp",
+  "telegram",
+];
+
+export const socialLabels: Record<SocialKind, string> = {
+  facebook: "Facebook",
+  x: "X (Twitter)",
+  instagram: "Instagram",
+  youtube: "YouTube",
+  linkedin: "LinkedIn",
+  whatsapp: "WhatsApp",
+  telegram: "Telegram",
+};
+
+/** Panelde secilebilen yazi tipleri; hepsi Google Fonts uzerinden yuklenir. */
+export const fontOptions = [
+  "Sora",
+  "Manrope",
+  "Inter",
+  "Poppins",
+  "Nunito Sans",
+  "Roboto",
+  "Merriweather",
+  "Lora",
+] as const;
 
 /** Son yazilar siralamasi: yayin tarihine gore ya da kategori sirasina gore. */
 export type HomeFeedOrder = "date" | "category";
@@ -135,6 +229,62 @@ export const defaultSettings: GeneralSettings = {
   homeEventsEnabled: true,
   homeEventsLimit: 15,
   homeLinksEnabled: true,
+
+  logoUrl: "/logo.png",
+  faviconUrl: "/favicon.ico",
+  logoHeight: 72,
+  showBrandText: true,
+
+  themePrimary: "#2b7f95",
+  themeBrandDeep: "#22314f",
+  themeAccent: "#cbe9ef",
+  themeRadius: 12,
+  fontDisplay: "Sora",
+  fontBody: "Manrope",
+
+  seoTitle: "Acil Tıp Uzmanı — Acil Tıbbın Nabzı",
+  seoDescription:
+    "Türkiye acil tıp camiası için haber, kılavuz, kongre takvimi ve dernek kaynakları.",
+  seoOgImageUrl: "",
+  twitterHandle: "",
+  gaMeasurementId: "",
+  searchConsoleToken: "",
+  seoNoindex: false,
+
+  footerAbout: "Acil Tıp Buluşma Noktası — haber, etkinlik ve yayın arşivi.",
+  footerColumns: [
+    {
+      title: "Bölümler",
+      links: [
+        { label: "Haberler", href: "/haberler" },
+        { label: "Etkinlikler", href: "/etkinlikler" },
+        { label: "Dernekler & Yayınlar", href: "/kaynaklar" },
+      ],
+    },
+  ],
+  socialLinks: [],
+  contactPhone: "",
+  contactAddress: "",
+  copyright: "© {yil} Acil Tıp Uzmanı. Tüm hakları saklıdır.",
+
+  showDisclaimer: true,
+  disclaimerText:
+    "Sitede yer alan yazılar bilgi amaçlı olup, hastalar için kullanılmamalıdır. Her hasta kendine özeldir.",
+
+  notFoundTitle: "Sayfa bulunamadı",
+  notFoundMessage: "Aradığınız sayfa taşınmış ya da hiç var olmamış olabilir.",
+  notFoundButton: "Anasayfaya dön",
+  errorTitle: "Bu sayfa yüklenemedi",
+  errorMessage: "Bir aksilik oldu. Sayfayı yenilemeyi ya da anasayfaya dönmeyi deneyebilirsiniz.",
+
+  linkGroups: [
+    { kind: "yayin", title: "Acil Tıp Derneklerinin Yayınları" },
+    { kind: "dernek", title: "Acil Tıp Dernekleri" },
+    { kind: "klinik", title: "Acil Tıp Klinikleri Web Siteleri" },
+    { kind: "kaynak", title: "Acil Tıp Web Siteleri" },
+  ],
+
+  searchEnabled: true,
 };
 
 /** Anasayfa icin cekilen yazi havuzu. Kategori filtresi sonrasi yeterli kart kalsin diye genis tutulur. */
@@ -235,6 +385,9 @@ export type PageItem = {
   cover_url: string | null;
   status: string;
   sort_order: number;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_image_url: string | null;
 };
 
 export type MenuItem = {
@@ -293,6 +446,63 @@ function asBoundedNumber(value: unknown, fallback: number, min: number, max: num
   return Math.min(max, Math.max(min, Math.round(parsed)));
 }
 
+function asString(value: unknown, fallback = ""): string {
+  return typeof value === "string" ? value : fallback;
+}
+
+/** Panelde renk girisi hex; bozuk deger tema degiskenini kirmasin diye dogrulanir. */
+function asHexColor(value: unknown, fallback: string): string {
+  return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value.trim())
+    ? value.trim().toLowerCase()
+    : fallback;
+}
+
+/** Yalnizca site ici (/...) ya da tam URL kabul edilir; "javascript:" gibi seyler elenir. */
+function asSafeHref(value: unknown, fallback = "/"): string {
+  const raw = asString(value).trim();
+  if (raw.startsWith("/") || raw.startsWith("#")) return raw;
+  if (/^https?:\/\//i.test(raw) || /^mailto:/i.test(raw) || /^tel:/i.test(raw)) return raw;
+  return fallback;
+}
+
+function asNavLinks(value: unknown): NavLink[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+    .map((item) => ({ label: asString(item["label"]), href: asSafeHref(item["href"]) }))
+    .filter((link) => link.label.length > 0);
+}
+
+function asFooterColumns(value: unknown, fallback: FooterColumn[]): FooterColumn[] {
+  if (!Array.isArray(value)) return fallback;
+  return value
+    .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+    .map((item) => ({ title: asString(item["title"]), links: asNavLinks(item["links"]) }));
+}
+
+function asSocialLinks(value: unknown): SocialLink[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+    .map((item) => ({
+      kind: socialKinds.includes(item["kind"] as SocialKind)
+        ? (item["kind"] as SocialKind)
+        : "facebook",
+      url: asString(item["url"]).trim(),
+    }))
+    .filter((link) => /^https?:\/\//i.test(link.url));
+}
+
+/** Bolum anahtari (kind) URL'de kullanildigi icin slug bicimine zorlanir. */
+function asLinkGroups(value: unknown, fallback: LinkGroup[]): LinkGroup[] {
+  if (!Array.isArray(value)) return fallback;
+  const groups = value
+    .filter((item): item is Record<string, unknown> => typeof item === "object" && item !== null)
+    .map((item) => ({ kind: slugify(asString(item["kind"])), title: asString(item["title"]) }))
+    .filter((group) => group.kind.length > 0 && group.title.length > 0);
+  return groups.length > 0 ? groups : fallback;
+}
+
 /** Panelden gelen JSON eksik ya da bozuk olsa da anasayfa calisir durumda kalsin. */
 function normalizeSettings(raw: Partial<GeneralSettings>): GeneralSettings {
   const merged = { ...defaultSettings, ...raw };
@@ -305,6 +515,25 @@ function normalizeSettings(raw: Partial<GeneralSettings>): GeneralSettings {
     homeFeedCategories: asSlugList(merged.homeFeedCategories),
     homeFeedOrder: merged.homeFeedOrder === "category" ? "category" : "date",
     homeEventsLimit: asBoundedNumber(merged.homeEventsLimit, 15, 3, 40),
+
+    logoUrl: asString(merged.logoUrl, defaultSettings.logoUrl),
+    faviconUrl: asString(merged.faviconUrl, defaultSettings.faviconUrl),
+    logoHeight: asBoundedNumber(merged.logoHeight, defaultSettings.logoHeight, 24, 140),
+
+    themePrimary: asHexColor(merged.themePrimary, defaultSettings.themePrimary),
+    themeBrandDeep: asHexColor(merged.themeBrandDeep, defaultSettings.themeBrandDeep),
+    themeAccent: asHexColor(merged.themeAccent, defaultSettings.themeAccent),
+    themeRadius: asBoundedNumber(merged.themeRadius, defaultSettings.themeRadius, 0, 28),
+    fontDisplay: fontOptions.includes(merged.fontDisplay as (typeof fontOptions)[number])
+      ? merged.fontDisplay
+      : defaultSettings.fontDisplay,
+    fontBody: fontOptions.includes(merged.fontBody as (typeof fontOptions)[number])
+      ? merged.fontBody
+      : defaultSettings.fontBody,
+
+    footerColumns: asFooterColumns(merged.footerColumns, defaultSettings.footerColumns),
+    socialLinks: asSocialLinks(merged.socialLinks),
+    linkGroups: asLinkGroups(merged.linkGroups, defaultSettings.linkGroups),
   };
 }
 
@@ -603,15 +832,11 @@ export const tagArchiveQuery = (slug: string) => ({
 
 /* ── Dernek & yayin bolumleri ──────────────────────────────────────── */
 
-export type LinkGroup = { kind: string; title: string };
-
-/** LogoWall bolumleri ve /kaynaklar/$kind sayfalari ayni listeyi kullanir. */
-export const linkGroups: LinkGroup[] = [
-  { kind: "yayin", title: "Acil Tıp Derneklerinin Yayınları" },
-  { kind: "dernek", title: "Acil Tıp Dernekleri" },
-  { kind: "klinik", title: "Acil Tıp Klinikleri Web Siteleri" },
-  { kind: "kaynak", title: "Acil Tıp Web Siteleri" },
-];
+/**
+ * Bolum basliklari artik panelden yonetiliyor (Arayuz > Dernek & Yayin bolumleri).
+ * Ayar okunamadiginda bu liste devreye girer.
+ */
+export const defaultLinkGroups: LinkGroup[] = defaultSettings.linkGroups;
 
 export const linksByKindQuery = (kind: string) => ({
   queryKey: ["links", "kind", kind],
@@ -623,5 +848,87 @@ export const linksByKindQuery = (kind: string) => ({
       .order("sort_order", { ascending: true });
     if (error) throw error;
     return (data ?? []) as LinkItem[];
+  },
+});
+
+/* ── Site ici arama ────────────────────────────────────────────────── */
+
+export type SearchHit = {
+  kind: "post" | "page" | "event";
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  date: string | null;
+};
+
+/** PostgREST `or` filtresinde virgul ve parantez ayirici sayildigi icin temizlenir. */
+function escapeSearchTerm(term: string) {
+  return term.replace(/[,()%\\]/g, " ").trim();
+}
+
+export const SEARCH_LIMIT = 30;
+
+export const searchQuery = (term: string) => ({
+  queryKey: ["search", term],
+  enabled: term.trim().length >= 2,
+  queryFn: async (): Promise<SearchHit[]> => {
+    const clean = escapeSearchTerm(term);
+    if (clean.length < 2) return [];
+    const like = `%${clean}%`;
+
+    const [posts, pages, events] = await Promise.all([
+      supabase
+        .from("posts")
+        .select("id,title,slug,excerpt,published_at,created_at")
+        .eq("status", "published")
+        .or(`title.ilike.${like},excerpt.ilike.${like},content.ilike.${like}`)
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .limit(SEARCH_LIMIT),
+      supabase
+        .from("pages")
+        .select("id,title,slug,excerpt")
+        .eq("status", "published")
+        .or(`title.ilike.${like},excerpt.ilike.${like},content.ilike.${like}`)
+        .limit(SEARCH_LIMIT),
+      supabase
+        .from("events")
+        .select("id,title,slug,description,starts_at")
+        .eq("status", "published")
+        .or(`title.ilike.${like},description.ilike.${like},city.ilike.${like}`)
+        .order("starts_at", { ascending: false })
+        .limit(SEARCH_LIMIT),
+    ]);
+
+    if (posts.error) throw posts.error;
+    if (pages.error) throw pages.error;
+    if (events.error) throw events.error;
+
+    return [
+      ...(posts.data ?? []).map((r) => ({
+        kind: "post" as const,
+        id: r.id,
+        title: r.title,
+        slug: r.slug,
+        excerpt: r.excerpt,
+        date: r.published_at ?? r.created_at,
+      })),
+      ...(pages.data ?? []).map((r) => ({
+        kind: "page" as const,
+        id: r.id,
+        title: r.title,
+        slug: r.slug,
+        excerpt: r.excerpt,
+        date: null,
+      })),
+      ...(events.data ?? []).map((r) => ({
+        kind: "event" as const,
+        id: r.id,
+        title: r.title,
+        slug: r.slug,
+        excerpt: r.description,
+        date: r.starts_at,
+      })),
+    ];
   },
 });
