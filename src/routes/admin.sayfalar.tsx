@@ -250,19 +250,19 @@ function AdminPages() {
       </div>
 
       <Dialog open={draft !== null} onOpenChange={(open) => !open && setDraft(null)}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-4xl">
-          <DialogHeader>
+        <DialogContent className="flex h-[92vh] max-w-[1100px] flex-col gap-4 overflow-hidden sm:max-w-[1100px]">
+          <DialogHeader className="shrink-0">
             <DialogTitle>{draft?.id ? "Sayfayı düzenle" : "Yeni sayfa"}</DialogTitle>
           </DialogHeader>
           {draft ? (
-            <Tabs defaultValue="content">
-              <TabsList>
+            <Tabs defaultValue="content" className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="shrink-0 self-start">
                 <TabsTrigger value="content">İçerik</TabsTrigger>
                 <TabsTrigger value="settings">Yayın & sınıflandırma</TabsTrigger>
                 <TabsTrigger value="seo">SEO & paylaşım</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="content" className="mt-5 space-y-4">
+              <TabsContent value="content" className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
                 <div className="space-y-2">
                   <Label>Başlık</Label>
                   <Input
@@ -300,7 +300,7 @@ function AdminPages() {
                 />
               </TabsContent>
 
-              <TabsContent value="settings" className="mt-5 space-y-4">
+              <TabsContent value="settings" className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Durum</Label>
@@ -361,7 +361,7 @@ function AdminPages() {
                 />
               </TabsContent>
 
-              <TabsContent value="seo" className="mt-5">
+              <TabsContent value="seo" className="mt-5 min-h-0 flex-1 overflow-y-auto pr-1">
                 <SeoFields
                   draft={draft}
                   onChange={(patch) => setDraft({ ...draft, ...patch })}
@@ -373,7 +373,7 @@ function AdminPages() {
               </TabsContent>
             </Tabs>
           ) : null}
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t border-border pt-4">
             <Button variant="outline" onClick={() => setDraft(null)}>
               Vazgeç
             </Button>

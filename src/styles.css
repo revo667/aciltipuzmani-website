@@ -346,6 +346,14 @@
 
 .ProseMirror {
   outline: none;
+  /* Uzun URL/alt cizgi gibi bolunmeyen metinler kutuyu tasirmasin. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
@@ -360,6 +368,7 @@
 .ProseMirror table {
   display: table;
   table-layout: fixed;
+  max-width: 100%;
 }
 
 .ProseMirror .selectedCell {

@@ -90,7 +90,7 @@ function Toolbar({ editor, onPickImage }: { editor: Editor; onPickImage: () => v
   }, [editor]);
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/40 p-1.5">
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/40 p-1.5 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
       <ToolbarButton
         title="Kalın"
         active={editor.isActive("bold")}
@@ -331,12 +331,9 @@ export function RichEditor({
       </div>
 
       {mode === "visual" ? (
-        <div className="overflow-hidden rounded-lg border border-border bg-background">
+        <div className="relative max-h-[60vh] min-w-0 overflow-y-auto rounded-lg border border-border bg-background">
           {editor ? <Toolbar editor={editor} onPickImage={() => setPicking(true)} /> : null}
-          <EditorContent
-            editor={editor}
-            className="max-h-[60vh] overflow-y-auto px-4 py-3 text-sm"
-          />
+          <EditorContent editor={editor} className="min-w-0 px-4 py-3 text-sm" />
         </div>
       ) : (
         <Textarea
