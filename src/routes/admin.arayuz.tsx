@@ -661,7 +661,7 @@ function AdminAppearance() {
               Console'a şu adresi ekleyin:
             </p>
             <code className="block rounded-lg bg-muted p-3 text-sm">
-              https://aciltipuzmani.com/sitemap.xml
+              https://aciltip.net/sitemap.xml
             </code>
           </Section>
 

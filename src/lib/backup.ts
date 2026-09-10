@@ -205,5 +205,5 @@ export async function buildBackup(
 
   onProgress({ step: "Arşiv hazırlanıyor", done: 0, total: 1 });
   const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE" });
-  return { blob, fileName: `aciltipuzmani-yedek-${stamp}.zip`, summary };
+  return { blob, fileName: `aciltip-yedek-${stamp}.zip`, summary };
 }

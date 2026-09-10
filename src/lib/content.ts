@@ -197,7 +197,7 @@ export const defaultSettings: GeneralSettings = {
   announcement: "",
   heroTitle: "Acil Tıbbın Nabzı",
   heroSubtitle: "Türkiye acil tıp camiasının haber, etkinlik ve yayın merkezi.",
-  contactEmail: "info@aciltipuzmani.com",
+  contactEmail: "info@aciltip.net",
   showAnnouncement: false,
   newsTitle: "Son haberler",
   newsSubtitle: "Klinik pratik, eğitim ve camiadan güncel gelişmeler.",

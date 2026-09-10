@@ -280,7 +280,7 @@ function AdminUsers() {
                 type="email"
                 value={newUser.email}
                 onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="editor@aciltipuzmani.com"
+                placeholder="editor@aciltip.net"
               />
             </div>
             <div className="space-y-2">

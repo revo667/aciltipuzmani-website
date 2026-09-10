@@ -74,7 +74,7 @@ Bu arşiv, **Acil Tıp Uzmanı** haber ve etkinlik portalının tam kaynak kodla
 
 ## Admin Paneline Erişim
 
-- Admin paneli `admin.aciltipuzmani.com` alt alan adı üzerinden veya geliştirme ortamında `http://localhost:8080/giris` adresinden erişilir.
+- Admin paneli `admin.aciltip.net` alt alan adı üzerinden veya geliştirme ortamında `http://localhost:8080/giris` adresinden erişilir.
 - Giriş için `.env` içinde tanımlanan `ADMIN_USERNAME` ve `ADMIN_PASSWORD` kullanılır.
 
 ## Önemli Notlar

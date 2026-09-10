@@ -45,12 +45,31 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+// Sitenin asil alan adi aciltip.net. Eski alan adi (aciltipuzmani.com) ve www
+// varyantlari ayni Worker'a bagli; arama motorlari cift icerik gormesin diye
+// yol ve sorgu korunarak kalici (301) yonlendirilir.
+const PRIMARY_HOST = "aciltip.net";
+const REDIRECT_HOSTS: Record<string, string> = {
+  "www.aciltip.net": PRIMARY_HOST,
+  "aciltipuzmani.com": PRIMARY_HOST,
+  "www.aciltipuzmani.com": PRIMARY_HOST,
+  "admin.aciltipuzmani.com": `admin.${PRIMARY_HOST}`,
+};
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const url = new URL(request.url);
+      const redirectHost = REDIRECT_HOSTS[url.hostname];
+      if (redirectHost) {
+        url.protocol = "https:";
+        url.hostname = redirectHost;
+        url.port = "";
+        return Response.redirect(url.toString(), 301);
+      }
+
       // sitemap.xml ve robots.txt yayindaki icerikten uretilir; public/robots.txt
       // yerine buradaki dinamik surum kullanilir.
-      const url = new URL(request.url);
       if (url.pathname === "/sitemap.xml") return await renderSitemap(url.origin);
       if (url.pathname === "/robots.txt") return await renderRobots(url.origin);
 
