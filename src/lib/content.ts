@@ -493,6 +493,12 @@ function asSocialLinks(value: unknown): SocialLink[] {
     .filter((link) => /^https?:\/\//i.test(link.url));
 }
 
+/** GA olcum kimligi (G-XXXX, UA-XXXX-Y). Satir ici <script>'e yazildigi icin bicim disi deger atilir. */
+function asMeasurementId(value: unknown): string {
+  const id = asString(value).trim();
+  return /^(G|UA|AW|GT|DC)-[A-Z0-9-]{4,30}$/i.test(id) ? id : "";
+}
+
 /** Bolum anahtari (kind) URL'de kullanildigi icin slug bicimine zorlanir. */
 function asLinkGroups(value: unknown, fallback: LinkGroup[]): LinkGroup[] {
   if (!Array.isArray(value)) return fallback;
@@ -534,6 +540,7 @@ function normalizeSettings(raw: Partial<GeneralSettings>): GeneralSettings {
     footerColumns: asFooterColumns(merged.footerColumns, defaultSettings.footerColumns),
     socialLinks: asSocialLinks(merged.socialLinks),
     linkGroups: asLinkGroups(merged.linkGroups, defaultSettings.linkGroups),
+    gaMeasurementId: asMeasurementId(merged.gaMeasurementId),
   };
 }
 

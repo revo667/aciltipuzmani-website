@@ -54,9 +54,7 @@ export function MaintenanceGate({ children }: { children: ReactNode }) {
           {settings?.maintenanceMessage ||
             "Siteyi daha iyi hale getirmek için kısa bir ara verdik. Kısa süre içinde yeniden buradayız."}
         </p>
-        <p className="mt-8 text-xs text-muted-foreground">
-          {settings?.siteName || "aciltip.net"}
-        </p>
+        <p className="mt-8 text-xs text-muted-foreground">{settings?.siteName || "aciltip.net"}</p>
       </div>
     </div>
   );

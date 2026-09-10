@@ -38,3 +38,6 @@ dist-ssr
 
 # Scratch
 _to_delete/
+
+# Supabase CLI yerel durumu
+supabase/.temp/

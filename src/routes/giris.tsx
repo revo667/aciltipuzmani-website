@@ -53,6 +53,10 @@ function AdminLoginPage() {
       let email = input.toLowerCase();
       if (!input.includes("@")) {
         const result = await login({ data: { username: input, password } });
+        if (!result.ok && "limited" in result) {
+          toast.error(result.error);
+          return;
+        }
         email = result.ok ? result.email : usernameToEmail(input);
       }
       const { data: signedIn, error } = await supabase.auth.signInWithPassword({

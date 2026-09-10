@@ -262,7 +262,10 @@ function AdminPages() {
                 <TabsTrigger value="seo">SEO & paylaşım</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="content" className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <TabsContent
+                value="content"
+                className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+              >
                 <div className="space-y-2">
                   <Label>Başlık</Label>
                   <Input
@@ -300,7 +303,10 @@ function AdminPages() {
                 />
               </TabsContent>
 
-              <TabsContent value="settings" className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+              <TabsContent
+                value="settings"
+                className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+              >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Durum</Label>

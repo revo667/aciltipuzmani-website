@@ -1,26 +1,15 @@
 import { cn } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 /**
  * WordPress'ten aktarılan yazılar HTML olarak saklanıyor; elle girilen
  * eski içerikler ise düz metin olabiliyor. Bu bileşen ikisini de doğru render eder.
  *
- * İçerik zaten aktarım sırasında allowlist ile temizlendi. Buradaki temizlik
- * ikinci savunma katmanı: admin panelinden yapıştırılan içerik için de geçerli.
+ * HTML her render'da allowlist ile temizlenir: panelin "Kaynak" sekmesinden
+ * yapıştırılan içerik de dahil, editör hesabı üzerinden script çalıştırılamaz.
  */
 
 const HAS_HTML = /<\/?[a-z][a-z0-9]*(\s[^>]*)?>/i;
-
-function sanitize(input: string): string {
-  return input
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/<\s*(script|style|iframe|object|embed|form|link|meta)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
-    .replace(/<\s*(script|style|iframe|object|embed|form|link|meta)\b[^>]*>/gi, "")
-    .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    .replace(
-      /\s(?:href|src)\s*=\s*(?:"\s*(?:javascript|vbscript|data):[^"]*"|'\s*(?:javascript|vbscript|data):[^']*')/gi,
-      "",
-    );
-}
 
 export function RichText({ html, className }: { html: string; className?: string }) {
   const value = html ?? "";
@@ -39,7 +28,7 @@ export function RichText({ html, className }: { html: string; className?: string
   return (
     <div
       className={cn("rich-text", className)}
-      dangerouslySetInnerHTML={{ __html: sanitize(value) }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(value) }}
     />
   );
 }

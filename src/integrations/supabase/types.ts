@@ -512,6 +512,10 @@ export type Database = {
         };
         Returns: boolean;
       };
+      hit_rate_limit: {
+        Args: { _key: string; _max: number; _window_seconds: number };
+        Returns: boolean;
+      };
       is_staff: { Args: { _user_id: string }; Returns: boolean };
     };
     Enums: {

@@ -16,10 +16,7 @@ export const Route = createFileRoute("/kaynaklar/$kind")({
     const group = groups.find((g) => g.kind === params.kind);
     if (!group) {
       return {
-        meta: [
-          { title: "Bölüm bulunamadı — aciltip.net" },
-          { name: "robots", content: "noindex" },
-        ],
+        meta: [{ title: "Bölüm bulunamadı — aciltip.net" }, { name: "robots", content: "noindex" }],
       };
     }
     const description = `${group.title} listesinin tamamı. Acil tıp camiasının bağlantı rehberi.`;

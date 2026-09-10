@@ -1,7 +1,11 @@
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { createHash, timingSafeEqual } from "node:crypto";
+import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { USERNAME_PATTERN, usernameToEmail } from "@/lib/staff-login";
+
+type AdminClient = Awaited<typeof import("@/integrations/supabase/client.server")>["supabaseAdmin"];
 
 /**
  * Asagidaki kullanici yonetimi fonksiyonlari service role anahtarini kullanir,
@@ -23,6 +27,16 @@ const requireAdmin = createMiddleware({ type: "function" })
     return next();
   });
 
+// Istemciden gelen veri tipine guvenilmez; sekil ve uzunluk sunucuda dogrulanir.
+const loginInput = z.object({ username: z.string().max(200), password: z.string().max(200) });
+const createStaffInput = z.object({
+  login: z.string().max(254),
+  password: z.string().max(200),
+  role: z.enum(["admin", "editor"]),
+});
+const resetPasswordInput = z.object({ userId: z.string().uuid(), password: z.string().max(200) });
+const deleteUserInput = z.object({ userId: z.string().uuid() });
+
 function matches(input: string, expected: string) {
   const a = createHash("sha256").update(input, "utf8").digest();
   const b = createHash("sha256").update(expected, "utf8").digest();
@@ -39,19 +53,75 @@ function sharedAdminEmail(username: string) {
   );
 }
 
+/** Ayni IP'den bu pencerede en fazla bu kadar yonetici girisi denenebilir. */
+const LOGIN_MAX_ATTEMPTS = 10;
+const LOGIN_WINDOW_SECONDS = 15 * 60;
+
+function clientIp() {
+  const headers = getRequest()?.headers;
+  // Cloudflare bu basligi kendisi yazar; istemci taklit edemez.
+  return (
+    headers?.get("cf-connecting-ip") ??
+    headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown"
+  );
+}
+
+/**
+ * Deneme hakki kaldiysa true. Sinir fonksiyonu henuz kurulu degilse
+ * (security_hardening migration'i uygulanmadiysa) yoneticiyi disarida birakmamak
+ * icin girisi engellemez, ama loga yazar.
+ */
+async function allowLoginAttempt(admin: AdminClient) {
+  const { data, error } = await admin.rpc("hit_rate_limit", {
+    _key: `admin-login:${clientIp()}`,
+    _max: LOGIN_MAX_ATTEMPTS,
+    _window_seconds: LOGIN_WINDOW_SECONDS,
+  });
+  if (error?.code === "PGRST202") {
+    console.error("[adminLogin] hit_rate_limit bulunamadı; güvenlik migration'ını uygulayın.");
+    return true;
+  }
+  if (error) throw new Error("Giriş şu anda doğrulanamıyor, lütfen tekrar deneyin.");
+  return data === true;
+}
+
+/** listUsers sayfalidir; hesap ilk sayfada olmayabilir. */
+async function findUserIdByEmail(admin: AdminClient, email: string) {
+  const perPage = 1000;
+  for (let page = 1; page <= 50; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+    const match = data.users.find((u) => u.email?.toLowerCase() === email);
+    if (match) return match.id;
+    if (data.users.length < perPage) break;
+  }
+  return null;
+}
+
 /**
  * Validates the shared admin username/password (stored as server secrets) and
  * makes sure a matching Supabase account with the admin role exists.
  * Returns the e-mail the client should use for signInWithPassword.
  */
 export const adminLogin = createServerFn({ method: "POST" })
-  .inputValidator((data: { username: string; password: string }) => data)
+  .inputValidator(loginInput)
   .handler(async ({ data }) => {
     const expectedUser = process.env["ADMIN_USERNAME"];
     const expectedPass = process.env["ADMIN_PASSWORD"];
     if (!expectedUser || !expectedPass) {
       return { ok: false as const, error: "Yönetici bilgileri sunucuda tanımlı değil." };
     }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (!(await allowLoginAttempt(supabaseAdmin))) {
+      return {
+        ok: false as const,
+        limited: true as const,
+        error: "Çok fazla hatalı deneme. Lütfen 15 dakika sonra tekrar deneyin.",
+      };
+    }
+
     const okUser = matches(data.username.trim().toLowerCase(), expectedUser.trim().toLowerCase());
     const okPass = matches(data.password, expectedPass);
     if (!okUser || !okPass) {
@@ -59,15 +129,13 @@ export const adminLogin = createServerFn({ method: "POST" })
     }
 
     const email = sharedAdminEmail(expectedUser);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    if (listErr) return { ok: false as const, error: listErr.message };
-
-    let userId = list.users.find((u) => u.email?.toLowerCase() === email)?.id ?? null;
+    let userId: string | null;
+    try {
+      userId = await findUserIdByEmail(supabaseAdmin, email);
+    } catch (err) {
+      return { ok: false as const, error: (err as Error).message };
+    }
 
     if (userId) {
       const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
@@ -87,9 +155,10 @@ export const adminLogin = createServerFn({ method: "POST" })
       userId = created.user.id;
     }
 
-    await supabaseAdmin
+    const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
+    if (roleError) return { ok: false as const, error: roleError.message };
 
     return { ok: true as const, email };
   });
@@ -117,7 +186,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 /** Yeni editor/yonetici hesabi olusturur ve rolunu atar. E-posta ya da kullanici adi kabul eder. */
 export const createStaffUser = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((data: { login: string; password: string; role: "admin" | "editor" }) => data)
+  .inputValidator(createStaffInput)
   .handler(async ({ data }) => {
     const login = data.login.trim().toLowerCase();
     let email: string;
@@ -143,9 +212,6 @@ export const createStaffUser = createServerFn({ method: "POST" })
     }
     if (data.password.length < 8) {
       return { ok: false as const, error: "Şifre en az 8 karakter olmalı." };
-    }
-    if (data.role !== "admin" && data.role !== "editor") {
-      return { ok: false as const, error: "Geçersiz rol." };
     }
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -173,7 +239,7 @@ export const createStaffUser = createServerFn({ method: "POST" })
 /** Kullanicinin sifresini yonetici olarak degistirir. */
 export const resetStaffPassword = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((data: { userId: string; password: string }) => data)
+  .inputValidator(resetPasswordInput)
   .handler(async ({ data }) => {
     if (data.password.length < 8) {
       return { ok: false as const, error: "Şifre en az 8 karakter olmalı." };
@@ -189,7 +255,7 @@ export const resetStaffPassword = createServerFn({ method: "POST" })
 /** Kullaniciyi tamamen siler. */
 export const deleteStaffUser = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((data: { userId: string }) => data)
+  .inputValidator(deleteUserInput)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
