@@ -6,6 +6,7 @@ import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { adminLogin } from "@/lib/admin-auth.functions";
+import { usernameToEmail } from "@/lib/staff-login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,17 +46,35 @@ function AdminLoginPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      const result = await login({ data: { username, password } });
-      if (!result.ok) {
-        toast.error(result.error);
-        return;
+      const input = username.trim();
+      // E-posta girildiyse panelden eklenen hesaptir; dogrudan Supabase ile giris yapilir.
+      // Kullanici adi girildiyse once sunucudaki ortak yonetici bilgisi denenir; tutmazsa
+      // panelden kullanici adiyla acilmis hesap olarak giris yapilir.
+      let email = input.toLowerCase();
+      if (!input.includes("@")) {
+        const result = await login({ data: { username: input, password } });
+        email = result.ok ? result.email : usernameToEmail(input);
       }
-      const { error } = await supabase.auth.signInWithPassword({
-        email: result.email,
+      const { data: signedIn, error } = await supabase.auth.signInWithPassword({
+        email,
         password,
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(
+          error.message === "Invalid login credentials"
+            ? "Kullanıcı adı / e-posta veya şifre hatalı."
+            : error.message,
+        );
+        return;
+      }
+      const { data: roleRows } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", signedIn.user.id)
+        .in("role", ["admin", "editor"]);
+      if (!roleRows?.length) {
+        await supabase.auth.signOut();
+        toast.error("Bu hesabın yönetim paneline erişim yetkisi yok.");
         return;
       }
       toast.success("Giriş yapıldı");
@@ -76,13 +95,14 @@ function AdminLoginPage() {
           </span>
           <CardTitle>Yönetici girişi</CardTitle>
           <CardDescription>
-            Bu alan yalnızca site yöneticisine açıktır. Kullanıcı adı ve şifre ile giriş yapın.
+            Bu alan yalnızca yönetici ve editörlere açıktır. E-posta (veya yönetici kullanıcı adı)
+            ve şifre ile giriş yapın.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">Kullanıcı adı</Label>
+              <Label htmlFor="username">E-posta veya kullanıcı adı</Label>
               <Input
                 id="username"
                 autoComplete="username"

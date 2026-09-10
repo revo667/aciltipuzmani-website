@@ -31,6 +31,7 @@ import {
   listAdminUsers,
   resetStaffPassword,
 } from "@/lib/admin-auth.functions";
+import { loginLabel } from "@/lib/staff-login";
 
 export const Route = createFileRoute("/admin/kullanicilar")({
   component: AdminUsers,
@@ -61,7 +62,7 @@ function AdminUsers() {
   const { isAdmin } = useAuth();
   const [creating, setCreating] = useState(false);
   const [newUser, setNewUser] = useState({
-    email: "",
+    login: "",
     password: randomPassword(),
     role: "editor" as "admin" | "editor",
   });
@@ -97,7 +98,8 @@ function AdminUsers() {
     },
   });
 
-  const emailOf = (id: string) => accounts?.find((a) => a.id === id)?.email ?? "";
+  // Kullanici adiyla acilan hesaplarda sahte e-posta yerine kullanici adi gosterilir.
+  const emailOf = (id: string) => loginLabel(accounts?.find((a) => a.id === id)?.email ?? "");
   const lastSeenOf = (id: string) => accounts?.find((a) => a.id === id)?.lastSignInAt ?? null;
 
   const toggleRole = useMutation({
@@ -128,9 +130,9 @@ function AdminUsers() {
       return result;
     },
     onSuccess: async () => {
-      toast.success(`${newUser.email} eklendi. Şifreyi kendisine iletin.`);
+      toast.success(`${newUser.login.trim()} eklendi. Şifreyi kendisine iletin.`);
       setCreating(false);
-      setNewUser({ email: "", password: randomPassword(), role: "editor" });
+      setNewUser({ login: "", password: randomPassword(), role: "editor" });
       await qc.invalidateQueries();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -275,13 +277,18 @@ function AdminUsers() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>E-posta</Label>
+              <Label>E-posta veya kullanıcı adı</Label>
               <Input
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                placeholder="editor@aciltip.net"
+                value={newUser.login}
+                onChange={(e) => setNewUser({ ...newUser, login: e.target.value })}
+                placeholder="editor@aciltip.net veya ahmet"
+                autoCapitalize="none"
+                autoCorrect="off"
               />
+              <p className="text-xs text-muted-foreground">
+                Kullanıcı adı girerseniz kişi giriş sayfasında bu kullanıcı adıyla girer (harf,
+                rakam, nokta, tire; Türkçe karakter olmadan).
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Şifre</Label>
@@ -321,7 +328,7 @@ function AdminUsers() {
               Vazgeç
             </Button>
             <Button
-              disabled={create.isPending || !newUser.email || newUser.password.length < 8}
+              disabled={create.isPending || !newUser.login.trim() || newUser.password.length < 8}
               onClick={() => create.mutate()}
             >
               {create.isPending ? "Ekleniyor…" : "Kullanıcıyı ekle"}

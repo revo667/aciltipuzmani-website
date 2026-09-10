@@ -16,6 +16,7 @@ import {
   Images,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { loginLabel } from "@/lib/staff-login";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -97,7 +98,7 @@ function AdminLayout() {
           ))}
         </nav>
         <div className="mt-3 border-t border-border pt-3">
-          <p className="px-2 text-xs text-muted-foreground">{user.email}</p>
+          <p className="px-2 text-xs text-muted-foreground">{loginLabel(user.email ?? "")}</p>
           <Button
             variant="ghost"
             size="sm"

@@ -1,6 +1,7 @@
 import { createMiddleware, createServerFn } from "@tanstack/react-start";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { USERNAME_PATTERN, usernameToEmail } from "@/lib/staff-login";
 
 /**
  * Asagidaki kullanici yonetimi fonksiyonlari service role anahtarini kullanir,
@@ -28,6 +29,16 @@ function matches(input: string, expected: string) {
   return timingSafeEqual(a, b);
 }
 
+/** Ortak yonetici hesabinin Supabase'deki e-postasi. */
+function sharedAdminEmail(username: string) {
+  return usernameToEmail(
+    username
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, ""),
+  );
+}
+
 /**
  * Validates the shared admin username/password (stored as server secrets) and
  * makes sure a matching Supabase account with the admin role exists.
@@ -47,10 +58,7 @@ export const adminLogin = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Kullanıcı adı veya şifre hatalı." };
     }
 
-    const email = `${expectedUser
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]/g, "")}@aciltipuzmani.com`;
+    const email = sharedAdminEmail(expectedUser);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -106,14 +114,32 @@ export const listAdminUsers = createServerFn({ method: "GET" })
     };
   });
 
-/** Yeni editor/yonetici hesabi olusturur ve rolunu atar. */
+/** Yeni editor/yonetici hesabi olusturur ve rolunu atar. E-posta ya da kullanici adi kabul eder. */
 export const createStaffUser = createServerFn({ method: "POST" })
   .middleware([requireAdmin])
-  .inputValidator((data: { email: string; password: string; role: "admin" | "editor" }) => data)
+  .inputValidator((data: { login: string; password: string; role: "admin" | "editor" }) => data)
   .handler(async ({ data }) => {
-    const email = data.email.trim().toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      return { ok: false as const, error: "Geçerli bir e-posta adresi girin." };
+    const login = data.login.trim().toLowerCase();
+    let email: string;
+    if (login.includes("@")) {
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(login)) {
+        return { ok: false as const, error: "Geçerli bir e-posta adresi girin." };
+      }
+      email = login;
+    } else {
+      if (!USERNAME_PATTERN.test(login)) {
+        return {
+          ok: false as const,
+          error:
+            "Kullanıcı adı 3-32 karakter olmalı; yalnızca harf (Türkçe karakter olmadan), rakam, nokta, tire veya alt çizgi içerebilir.",
+        };
+      }
+      email = usernameToEmail(login);
+    }
+    // Ortak yonetici hesabi da ayni alan adini kullanir; o hesabi baskasina vermeyelim.
+    const adminUser = process.env["ADMIN_USERNAME"];
+    if (adminUser && email === sharedAdminEmail(adminUser)) {
+      return { ok: false as const, error: "Bu kullanıcı adı kullanılamaz." };
     }
     if (data.password.length < 8) {
       return { ok: false as const, error: "Şifre en az 8 karakter olmalı." };
@@ -130,6 +156,9 @@ export const createStaffUser = createServerFn({ method: "POST" })
       email_confirm: true,
     });
     if (error || !created.user) {
+      if (error?.code === "email_exists") {
+        return { ok: false as const, error: "Bu e-posta veya kullanıcı adı zaten kayıtlı." };
+      }
       return { ok: false as const, error: error?.message ?? "Hesap oluşturulamadı." };
     }
 
@@ -138,7 +167,7 @@ export const createStaffUser = createServerFn({ method: "POST" })
       .upsert({ user_id: created.user.id, role: data.role }, { onConflict: "user_id,role" });
     if (roleError) return { ok: false as const, error: roleError.message };
 
-    return { ok: true as const, email };
+    return { ok: true as const, login };
   });
 
 /** Kullanicinin sifresini yonetici olarak degistirir. */
