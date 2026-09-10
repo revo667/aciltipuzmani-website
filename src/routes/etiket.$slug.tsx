@@ -21,7 +21,7 @@ export const Route = createFileRoute("/etiket/$slug")({
       meta: [
         { title: `${name} — aciltip.net` },
         { name: "description", content: description },
-        { property: "og:title", content: `${name} — Acil Tıp Uzmanı` },
+        { property: "og:title", content: `${name} — aciltip.net` },
         { property: "og:description", content: description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },

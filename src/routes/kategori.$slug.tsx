@@ -11,7 +11,7 @@ export const Route = createFileRoute("/kategori/$slug")({
     if (!name) {
       return {
         meta: [
-          { title: "Kategori bulunamadı — Acil Tıp Uzmanı" },
+          { title: "Kategori bulunamadı — aciltip.net" },
           { name: "robots", content: "noindex" },
         ],
       };
@@ -20,9 +20,9 @@ export const Route = createFileRoute("/kategori/$slug")({
       loaderData?.term?.description ?? `${name} kategorisindeki tüm yazı ve sayfalar.`;
     return {
       meta: [
-        { title: `${name} — Acil Tıp Uzmanı` },
+        { title: `${name} — aciltip.net` },
         { name: "description", content: description.slice(0, 155) },
-        { property: "og:title", content: `${name} — Acil Tıp Uzmanı` },
+        { property: "og:title", content: `${name} — aciltip.net` },
         { property: "og:description", content: description.slice(0, 155) },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },

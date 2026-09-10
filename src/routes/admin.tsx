@@ -24,7 +24,7 @@ export const Route = createFileRoute("/admin")({
     meta: [
       { title: "Yönetim Paneli — aciltip.net" },
       { name: "description", content: "İçerik, etkinlik, kullanıcı ve arayüz yönetimi paneli." },
-      { property: "og:title", content: "Yönetim Paneli — Acil Tıp Uzmanı" },
+      { property: "og:title", content: "Yönetim Paneli — aciltip.net" },
       { property: "og:description", content: "İçerik ve site yönetimi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

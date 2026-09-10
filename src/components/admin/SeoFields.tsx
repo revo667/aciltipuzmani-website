@@ -51,7 +51,7 @@ export function SeoFields({
   folder: string;
 }) {
   const { data: settings } = useQuery(settingsQuery());
-  const siteName = settings?.siteName ?? "Acil Tıp Uzmanı";
+  const siteName = settings?.siteName ?? "aciltip.net";
 
   const effectiveTitle = draft.seo_title || fallbackTitle || "Başlıksız";
   const effectiveDescription =

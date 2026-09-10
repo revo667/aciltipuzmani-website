@@ -189,7 +189,7 @@ export async function buildBackup(
   zip.file(
     "YEDEK-BILGI.txt",
     [
-      `Acil Tıp Uzmanı — site yedeği`,
+      `aciltip.net — site yedeği`,
       `Tarih: ${new Date().toISOString()}`,
       ``,
       `İçerik: ${summary.join(", ")}`,

@@ -14,12 +14,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export const Route = createFileRoute("/giris")({
   head: () => ({
     meta: [
-      { title: "Yönetici Girişi — Acil Tıp Uzmanı" },
+      { title: "Yönetici Girişi — aciltip.net" },
       {
         name: "description",
-        content: "Acil Tıp Uzmanı yönetim paneline yönetici girişi.",
+        content: "aciltip.net yönetim paneline yönetici girişi.",
       },
-      { property: "og:title", content: "Yönetici Girişi — Acil Tıp Uzmanı" },
+      { property: "og:title", content: "Yönetici Girişi — aciltip.net" },
       { property: "og:description", content: "Yönetim paneline giriş yapın." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
