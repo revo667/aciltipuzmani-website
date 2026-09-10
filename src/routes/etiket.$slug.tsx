@@ -11,7 +11,7 @@ export const Route = createFileRoute("/etiket/$slug")({
     if (!name) {
       return {
         meta: [
-          { title: "Etiket bulunamadı — Acil Tıp Uzmanı" },
+          { title: "Etiket bulunamadı — aciltip.net" },
           { name: "robots", content: "noindex" },
         ],
       };
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/etiket/$slug")({
     const description = `${name} etiketiyle işaretlenmiş tüm yazı ve sayfalar.`;
     return {
       meta: [
-        { title: `${name} — Acil Tıp Uzmanı` },
+        { title: `${name} — aciltip.net` },
         { name: "description", content: description },
         { property: "og:title", content: `${name} — Acil Tıp Uzmanı` },
         { property: "og:description", content: description },

@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Yönetim Paneli — Acil Tıp Uzmanı" },
+      { title: "Yönetim Paneli — aciltip.net" },
       { name: "description", content: "İçerik, etkinlik, kullanıcı ve arayüz yönetimi paneli." },
       { property: "og:title", content: "Yönetim Paneli — Acil Tıp Uzmanı" },
       { property: "og:description", content: "İçerik ve site yönetimi." },

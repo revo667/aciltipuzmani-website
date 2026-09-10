@@ -17,7 +17,7 @@ export const Route = createFileRoute("/kaynaklar/$kind")({
     if (!group) {
       return {
         meta: [
-          { title: "Bölüm bulunamadı — Acil Tıp Uzmanı" },
+          { title: "Bölüm bulunamadı — aciltip.net" },
           { name: "robots", content: "noindex" },
         ],
       };
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/kaynaklar/$kind")({
     const description = `${group.title} listesinin tamamı. Acil tıp camiasının bağlantı rehberi.`;
     return {
       meta: [
-        { title: `${group.title} — Acil Tıp Uzmanı` },
+        { title: `${group.title} — aciltip.net` },
         { name: "description", content: description },
         { property: "og:title", content: group.title },
         { property: "og:description", content: description },

@@ -192,7 +192,7 @@ export const fontOptions = [
 export type HomeFeedOrder = "date" | "category";
 
 export const defaultSettings: GeneralSettings = {
-  siteName: "Acil Tıp Uzmanı",
+  siteName: "aciltip.net",
   tagline: "Acil Tıp Buluşma Noktası",
   announcement: "",
   heroTitle: "Acil Tıbbın Nabzı",
@@ -242,7 +242,7 @@ export const defaultSettings: GeneralSettings = {
   fontDisplay: "Sora",
   fontBody: "Manrope",
 
-  seoTitle: "Acil Tıp Uzmanı — Acil Tıbbın Nabzı",
+  seoTitle: "aciltip.net — Acil Tıbbın Nabzı",
   seoDescription:
     "Türkiye acil tıp camiası için haber, kılavuz, kongre takvimi ve dernek kaynakları.",
   seoOgImageUrl: "",
@@ -265,7 +265,7 @@ export const defaultSettings: GeneralSettings = {
   socialLinks: [],
   contactPhone: "",
   contactAddress: "",
-  copyright: "© {yil} Acil Tıp Uzmanı. Tüm hakları saklıdır.",
+  copyright: "© {yil} aciltip.net Tüm hakları saklıdır.",
 
   showDisclaimer: true,
   disclaimerText:
