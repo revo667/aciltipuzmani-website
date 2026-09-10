@@ -47,6 +47,9 @@ const feedGridClass: Record<number, string> = {
 /** Kategorisi olmayan ogeler (etkinlik, dis yazi) kategori siralamasinda en sona duser. */
 const UNRANKED = Number.MAX_SAFE_INTEGER;
 
+/** Son yazilar kartinin ustunde gosterilen en fazla kategori sayisi. */
+const FEED_MAX_KINDS = 3;
+
 function FeatureTile({
   post,
   className,
@@ -139,7 +142,7 @@ function Home() {
   /* ── Son yazilar ────────────────────────────────────────────────── */
   type FeedItem = {
     key: string;
-    kind: string;
+    kinds: string[];
     rank: number;
     title: string;
     excerpt: string | null;
@@ -148,21 +151,21 @@ function Home() {
     href?: string;
   };
 
+  const sortOrderOf = (slug: string) => taxonomy.terms[slug]?.sortOrder ?? UNRANKED;
   const rankOf = (slugs: string[]) =>
-    slugs.reduce(
-      (best, slug) => Math.min(best, taxonomy.terms[slug]?.sortOrder ?? UNRANKED),
-      UNRANKED,
-    );
+    slugs.reduce((best, slug) => Math.min(best, sortOrderOf(slug)), UNRANKED);
 
   const feedPosts: FeedItem[] = posts
     .filter((p) => !featuredIds.has(p.id))
     .filter((p) => matchesCategories(p, taxonomy, settings.homeFeedCategories))
     .map((p) => {
       const slugs = categorySlugsOf(p, taxonomy);
-      const primary = slugs[0];
       return {
         key: `post-${p.id}`,
-        kind: (primary ? taxonomy.terms[primary]?.name : undefined) ?? p.category,
+        kinds: [...slugs]
+          .sort((a, b) => sortOrderOf(a) - sortOrderOf(b))
+          .slice(0, FEED_MAX_KINDS)
+          .map((slug) => taxonomy.terms[slug]?.name ?? slug),
         rank: rankOf(slugs),
         title: p.title,
         excerpt: p.excerpt,
@@ -174,7 +177,7 @@ function Home() {
   const feedEvents: FeedItem[] = settings.homeFeedIncludeEvents
     ? events.map((e) => ({
         key: `event-${e.id}`,
-        kind: "Etkinlik",
+        kinds: ["Etkinlik"],
         rank: UNRANKED,
         title: e.title,
         excerpt: e.description,
@@ -185,7 +188,7 @@ function Home() {
   const feedExternal: FeedItem[] = settings.homeFeedIncludeExternal
     ? externalArticles.map((a) => ({
         key: `ext-${a.id}`,
-        kind: a.source_name,
+        kinds: [a.source_name],
         rank: UNRANKED,
         title: a.title,
         excerpt: null,
@@ -242,9 +245,13 @@ function Home() {
                 const card = (
                   <Card className="h-full card-hover">
                     <CardHeader>
-                      <Badge variant="secondary" className="w-fit capitalize">
-                        {item.kind}
-                      </Badge>
+                      <div className="flex flex-wrap gap-1.5">
+                        {item.kinds.map((kind) => (
+                          <Badge key={kind} variant="secondary" className="w-fit capitalize">
+                            {kind}
+                          </Badge>
+                        ))}
+                      </div>
                       <CardTitle className="mt-2 text-lg leading-snug">{item.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
